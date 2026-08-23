@@ -32,10 +32,21 @@ function El(id){
   this.id=id; this.dataset={}; this.style={}; this._html="";
   this.classList={ toggle:function(){}, add:function(){}, remove:function(){}, contains:function(){return false} };
 }
+// Keep every listener, not the last one: the page attaches two click handlers
+// to the map container, and a stub that overwrote one would test a page that
+// does not exist.
 El.prototype.addEventListener=function(ev,fn){
-  (this._on || (this._on={}))[ev] = fn;
+  var m=(this._on || (this._on={}));
+  (m[ev] || (m[ev]=[])).push(fn);
 };
-El.prototype.click=function(){ if(this._on&&this._on.click) this._on.click({target:this}); };
+El.prototype.fire=function(ev,obj){
+  var fns=this._on && this._on[ev];
+  if(!fns) return false;
+  obj=obj||{}; if(!obj.target) obj.target=this;
+  for(var i=0;i<fns.length;i++) fns[i](obj);
+  return true;
+};
+El.prototype.click=function(){ this.fire("click"); };
 El.prototype.setAttribute=function(){};
 El.prototype.getAttribute=function(){return null};
 El.prototype.removeAttribute=function(){};
@@ -63,6 +74,12 @@ window.window=window;
 var __out=(typeof process!=="undefined"&&process.stdout)
   ? function(t){ process.stdout.write(t+"\n"); } : function(){};
 var console=window.console;
+// No event loop here, so a timer fires at once. Same bargain as SP below: work
+// the page defers has to have happened by the time the checks run.
+var __timers=0;
+function setTimeout(fn){ __timers++; fn(); return __timers; }
+function clearTimeout(){}
+var navigator={platform:"MacIntel", userAgent:"smoke"};
 function getComputedStyle(){ return {getPropertyValue:function(){return "#000"}}; }
 function MutationObserver(fn){ this.observe=function(){}; }
 
@@ -87,6 +104,7 @@ function Bounds(){ }
 Bounds.prototype.pad=function(){ return this; };
 Bounds.prototype.contains=function(){ return true; };
 
+var __mapc=new El("mapc"), __zoom=16;
 var L={
   latLngBounds:function(){ note("latLngBounds"); return new Bounds(); },
   layerGroup:function(){ return new Layer("layerGroup"); },
@@ -100,11 +118,17 @@ var L={
     note("map");
     return {
       on:function(){}, off:function(){},
-      getContainer:function(){ return new El("mapc"); },
-      getZoom:function(){ return 16; },
+      // One container, not a fresh stub per call - the checks below have to
+      // reach the very listeners the page attached.
+      getContainer:function(){ return __mapc; },
+      getZoom:function(){ return __zoom; },
       fitBounds:function(){ note("fitBounds"); },
       setView:function(){ note("setView"); }, removeLayer:function(){}, addLayer:function(){},
       invalidateSize:function(){},
+      attributionControl:{setPrefix:function(){ note("attrPrefix"); }},
+      dragging:{enable:function(){ note("drag:on"); }, disable:function(){ note("drag:off"); }},
+      setZoomAround:function(pt,z){ note("setZoomAround"); __zoom=z; },
+      mouseEventToContainerPoint:function(){ return {x:200,y:200}; },
       scrollWheelZoom:{enable:function(){}, disable:function(){}}
     };
   }
@@ -172,7 +196,34 @@ function fetch(url){
 """
 
 CHECKS = r"""
+if(__els["map"] && /failed to draw/.test(__els["map"].innerHTML))
+  throw new Error("the page caught its own error and painted the apology: "+
+                  String(__els["map"].innerHTML).replace(/<[^>]*>/g," ").slice(0,220));
 if(!__calls["map"])       throw new Error("map was never created");
+if(!__calls["attrPrefix"]) throw new Error("the attribution prefix was left at Leaflet's default, which carries the flag");
+
+// Zoom gestures. A plain wheel has to fall through to the page - the map is a
+// tall panel mid-page, and a map that eats the scroll strands the reader on it.
+function __wheel(mod){
+  var swallowed=false;
+  __mapc.fire("wheel",{ctrlKey:mod, metaKey:false, deltaY:-300, deltaMode:0,
+                       preventDefault:function(){ swallowed=true; }});
+  return swallowed;
+}
+__calls["setZoomAround"]=0;
+if(__wheel(false)) throw new Error("a plain wheel over the map was swallowed - the page can no longer be scrolled past the map");
+if(__calls["setZoomAround"]) throw new Error("a plain wheel zoomed the map, so scrolling the page over it is impossible");
+if(!__wheel(true)) throw new Error("Cmd/Ctrl + wheel was not taken by the map, so the browser will zoom the whole page instead");
+if(!__calls["setZoomAround"]) throw new Error("Cmd/Ctrl + wheel did not zoom the map");
+var __before=__zoom;
+__wheel(true); __wheel(true);
+if(__zoom<=__before) throw new Error("wheeling up did not zoom in");
+// Clicking the map is consent: from then on the bare wheel zooms it.
+__mapc.fire("click");
+__calls["setZoomAround"]=0;
+if(!__wheel(false) || !__calls["setZoomAround"])
+  throw new Error("after clicking the map, a plain wheel still does not zoom it");
+if(__calls["drag:off"]) throw new Error("dragging was disabled on a fine pointer - a mouse must still be able to pan");
 if(!__calls["fitBounds"]) throw new Error("fitBounds never ran - the page would open blank");
 if(!__calls["html:rows"]) throw new Error("the table body was never written - the list would be empty");
 if(!__calls["html:switch"]) throw new Error("the datum switch was never written");

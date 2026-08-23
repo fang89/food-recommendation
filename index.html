@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Food places around Boon Keng, Bendemeer and Geylang Bahru, measured from home.">
 <title>Food Recommendation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -753,13 +760,27 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .mapcard-cap{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:13px 16px; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:11px; letter-spacing:.07em; text-transform:uppercase}
 .mapcard-cap b{color:var(--ink); font-weight:600}
 .mapcard-cap span{color:var(--ink-3); text-transform:none; letter-spacing:.02em; font-variant-numeric:tabular-nums}
+.mapbox{position:relative}
 #map{height:clamp(430px,64vh,700px); width:100%; background:var(--sheet-2)}
+
+/* Said only when a gesture was refused, so it explains itself at the moment
+   it is needed and then gets out of the way. Never intercepts a pointer. */
+.maphint{position:absolute; left:50%; top:14px; z-index:600; transform:translate(-50%,-6px);
+  margin:0; padding:8px 15px; max-width:calc(100% - 28px);
+  border:1px solid var(--rule); border-radius:100px; background:var(--halo);
+  box-shadow:0 1px 2px rgba(0,0,0,.06), 0 10px 26px -14px rgba(0,0,0,.45);
+  font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--ink-2);
+  text-align:center; white-space:nowrap; pointer-events:none;
+  opacity:0; transition:opacity .18s ease, transform .18s ease}
+.maphint.on{opacity:1; transform:translate(-50%,0)}
+.maphint kbd{font:inherit; color:var(--ink); font-weight:600}
 .leaflet-container{font-family:var(--mono); background:var(--sheet-2)}
 .leaflet-control-attribution{font-family:var(--mono); font-size:9.5px; background:var(--halo)!important; color:var(--ink-3)!important}
 .leaflet-control-attribution a{color:var(--ink-2)!important}
 .leaflet-bar a{background:var(--sheet); color:var(--ink); border-bottom-color:var(--rule)}
 .leaflet-bar a:hover{background:var(--sheet-2); color:var(--ink)}
 .leaflet-bar{border:1px solid var(--rule); box-shadow:none}
+.leaflet-container .leaflet-control-zoom a{width:36px; height:36px; line-height:34px; font-size:21px; font-weight:500}
 
 .hm{display:grid; place-items:center; cursor:pointer}
 .hm svg{display:block; width:32px; height:28px; overflow:visible;
@@ -891,9 +912,26 @@ tbody tr:last-child td{border-bottom:none}
 .colophon b{color:var(--ink-2); font-weight:500}
 .colophon a{color:var(--ink-2)}
 .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+html{-webkit-text-size-adjust:100%}
+
+/* A phone held upright. The layout already reflows - what it needs is smaller
+   type, a map that leaves room for the list under it, and a hint pill that
+   wraps instead of running off the edge. */
+@media (max-width:640px){
+  body{font-size:16px; padding:18px 14px 32px}
+  h1{font-size:31px}
+  #map{height:clamp(340px,56vh,470px)}
+  .sec-head{gap:6px 12px}
+  .sec-head .note{font-size:10px; letter-spacing:.02em}
+  .legend{gap:7px 14px; font-size:10px}
+  .maphint{font-size:10px; letter-spacing:.02em; white-space:normal}
+}
+
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
 </style>
+</head>
 
+<body>
 <div class="wrap">
 
   <header class="hero">
@@ -911,12 +949,15 @@ tbody tr:last-child td{border-bottom:none}
       <h2>Measured from</h2>
       <div class="switch" id="switch" role="group" aria-label="Choose which home to measure from"></div>
       <span class="spacer"></span>
-      <span class="note">Click any red marker or label for the card · scroll to zoom after clicking the map</span>
+      <span class="note" id="mapnote">Click any red marker or label for the card</span>
     </div>
 
     <figure class="mapcard">
       <figcaption class="mapcard-cap"><b>Street plan</b><span id="capRing">rings every 250 m</span></figcaption>
-      <div id="map"></div>
+      <div class="mapbox">
+        <div id="map"></div>
+        <p class="maphint" id="maphint" aria-hidden="true"></p>
+      </div>
       <div class="legend">
         <span><i class="k-home"></i>datum</span>
         <span><i class="k-off"></i>other door</span>
@@ -1033,8 +1074,70 @@ tbody tr:last-child td{border-bottom:none}
     layer.addTo(map); layer.bringToBack();
   }
   setTiles();
-  map.getContainer().addEventListener("click",function(){ map.scrollWheelZoom.enable(); });
-  map.getContainer().addEventListener("mouseleave",function(){ map.scrollWheelZoom.disable(); });
+  // Leaflet 1.9 ships a Ukrainian flag inside its own attribution prefix.
+  // Naming the prefix ourselves keeps the credit and drops the flag.
+  map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>');
+  // Zooming, with a mouse and with a thumb.
+  //
+  // The map is a tall panel in the middle of a page that scrolls, so it must
+  // not swallow a scroll meant for the page. Two gestures reach it without
+  // that ambiguity, and both are the ones Google Maps already taught everyone:
+  // hold Cmd (Ctrl off a Mac) and turn the wheel, or pinch. macOS sends a
+  // trackpad pinch as a wheel event with ctrlKey set, so that lands here too.
+  // A plain wheel keeps scrolling the page - until you click the map, after
+  // which the map is plainly the thing you are using and the wheel zooms it.
+  var COARSE=!!(window.matchMedia && window.matchMedia("(pointer:coarse)").matches);
+  var APPLE=/Mac|iPhone|iPad|iPod/.test((navigator.platform||"")+" "+(navigator.userAgent||""));
+  var mapEl=map.getContainer();
+
+  // One finger scrolls the page; two fingers work the map. Turning dragging
+  // off leaves Leaflet's touch-action at "pan-x pan-y", so the browser keeps
+  // the one-finger scroll for itself and hands the pinch to the map. A
+  // two-finger drag still pans, because the pinch handler follows its own
+  // centre. Deciding this up front matters: touch-action is read when a
+  // gesture begins, so flipping it mid-gesture would miss the first one.
+  if(COARSE) map.dragging.disable();
+
+  var hintEl=document.getElementById("maphint"), hintTimer=null;
+  hintEl.innerHTML=COARSE
+    ? "Use two fingers to move and zoom the map"
+    : "Hold <kbd>"+(APPLE?"\u2318":"Ctrl")+"</kbd> and scroll to zoom, or click the map first";
+  function hint(){
+    hintEl.classList.add("on");
+    clearTimeout(hintTimer);
+    hintTimer=setTimeout(function(){ hintEl.classList.remove("on"); },1700);
+  }
+  var mapNote=document.getElementById("mapnote");
+  if(mapNote) mapNote.innerHTML="Click any red marker or label for the card \u00b7 "+
+    (COARSE ? "pinch with two fingers to zoom"
+            : "hold "+(APPLE?"\u2318":"Ctrl")+" and scroll to zoom");
+
+  var armed=false, wheelSum=0, wheelPt=null, wheelTimer=null, wheelLast=0;
+  mapEl.addEventListener("wheel",function(e){
+    if(!(e.ctrlKey||e.metaKey||armed)){ hint(); return; }   // the page keeps the scroll
+    e.preventDefault();
+    var now=+new Date();
+    if(now-wheelLast>500) wheelSum=0;                       // a new gesture, not the last one
+    wheelLast=now;
+    wheelSum+= -e.deltaY*(e.deltaMode===1 ? 20 : e.deltaMode===2 ? 60 : 1);
+    wheelPt=map.mouseEventToContainerPoint(e);
+    clearTimeout(wheelTimer);
+    wheelTimer=setTimeout(function(){
+      // One wheel notch is about half a zoom level, snapped to the map's own
+      // 0.25 step and capped so a hard flick cannot throw the view off Kallang.
+      var dz=Math.max(-2,Math.min(2,wheelSum/240));
+      dz=Math.round(dz/.25)*.25;
+      if(!dz) return;              // a trackpad pinch arrives in slivers - keep them
+      wheelSum=0;
+      map.setZoomAround(wheelPt, map.getZoom()+dz);
+    },40);
+  },{passive:false});
+
+  mapEl.addEventListener("click",function(){ armed=true; });
+  mapEl.addEventListener("mouseleave",function(){ armed=false; });
+  mapEl.addEventListener("touchmove",function(e){
+    if(e.touches && e.touches.length===1) hint();
+  },{passive:true});
 
   var state={home:0, sel:null, sortKey:"rating", sortDir:-1};
   var SORTS={
@@ -1541,3 +1644,5 @@ tbody tr:last-child td{border-bottom:none}
   }
 })();
 </script>
+</body>
+</html>

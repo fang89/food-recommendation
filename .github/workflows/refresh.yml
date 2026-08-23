@@ -7,8 +7,8 @@ name: Refresh from sheet
 #   -> Run workflow
 #
 # It does the full job the browser's "Pull from sheet" button cannot: it
-# re-geocodes, recomputes the bounding box, and re-cuts the basemap tiles when
-# a new place falls outside the current one.
+# re-geocodes from the private postal-code tab, recomputes the bounding box,
+# and commits the result, so the change survives a reload.
 
 on:
   workflow_dispatch:          # the "Run workflow" button
@@ -31,9 +31,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install Pillow
-        run: python -m pip install --quiet pillow
 
       - name: Pull the sheet and rebuild
         run: |

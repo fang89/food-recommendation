@@ -44,15 +44,15 @@ Two things it deliberately cannot do:
 - **It never reads the postal-code tab.** Only the food tab's `gid` is compiled
   into the page. The homes are geocoded at build time and only their coordinates
   ship, so a browser pull has no way to reach the postal codes.
-- **It cannot re-cut the basemap.** Tiles are baked in over a fixed box. A place
-  outside that box still gets its row and its pin, and the page says plainly that
-  the map underneath it will be blank until someone rebuilds.
+- **It never writes anything back.** A pull changes the page in front of you and
+  nothing else. Reload and you are on the last published build again; only the
+  action below or `./update.sh` makes a change stick.
 
 ### 2. From GitHub — the **Refresh from sheet** action
 
 Actions → *Refresh from sheet* → **Run workflow**. That does the full job on a
-runner — re-geocode, recompute the bounding box, re-cut tiles if the box moved,
-smoke test, commit — and Pages redeploys. Still no terminal. It also runs itself
+runner — re-geocode, recompute the bounding box, smoke test, commit — and Pages
+redeploys. Still no terminal. It also runs itself
 weekly, so the page does not silently rot if nobody presses anything.
 
 ### 3. From a terminal
@@ -90,9 +90,8 @@ the one thing this project takes care to keep out. `geocode(..., private=True)`
 skips the cache for those, and every write strips any bare postal-code key an
 older build may have left behind.
 
-**`build/build.py`** fetches the basemap for the current bounding box, transcodes
-it, and inlines Leaflet, the tiles and the data into a single `index.html`. Tiles
-are cached per bounding box, so a refresh that does not move the map reuses them.
+**`build/build.py`** inlines Leaflet and `data/*.json` into a single `index.html`.
+The basemap is not inlined — it comes live from CARTO at view time.
 
 **`build/smoke.py`** then runs the built page's script against a stubbed Leaflet
 and DOM, and fails if the map never got a view, the table body never got written,
@@ -123,7 +122,7 @@ once the sheet's own code resolves.
 `data/config.json` holds everything you would otherwise have to edit code for:
 the sheet id and URL, walking speed, display names for the homes, hand-written
 short labels for places whose names are too long for the map, the MRT candidate
-list, and the tile zoom range and quality.
+list, and any home whose postal code the sheet has wrong (`home_overrides`).
 
 ## How it's built
 
@@ -139,8 +138,34 @@ are the only things fetched at runtime.
   tile server, so the tiles come down as needed, the map pans and zooms freely,
   and the page went from 3.03 MB to 0.22 MB.
 - **Both themes ship.** The tile layer swaps with the viewer's light/dark setting.
+- **It is a real HTML document** — doctype, `<head>`, and a `width=device-width`
+  viewport. It shipped for a while as a bare fragment, because the Artifact host
+  used to supply the document around it; GitHub Pages supplies nothing, so mobile
+  Safari laid the page out at 980px and scaled it down, and a pinch zoomed the
+  page rather than the map.
 - **Place data is never hand-edited.** It comes from `data/*.json`, which comes from
   the sheet.
+
+## Moving around the map
+
+The map is a tall panel in the middle of a page that scrolls, so it must not
+swallow a scroll meant for the page. It takes the two gestures that say
+unambiguously "I mean the map", which are the ones Google Maps already uses:
+
+| | zoom | pan |
+|---|---|---|
+| mouse | hold **⌘**/**Ctrl** and scroll, or the **+ −** buttons, or double-click | drag |
+| trackpad | pinch | two-finger drag with ⌘, or drag |
+| phone | pinch with two fingers | drag with two fingers |
+
+A plain wheel, or one finger on a phone, scrolls the page — and the map says so
+in a pill for a second, rather than just ignoring you. Once you have clicked the
+map, a plain wheel zooms it too: by then the map is plainly what you are using.
+
+On a touch screen Leaflet's dragging handler is switched off at load. That is
+what leaves `touch-action` at `pan-x pan-y`, which is what lets the browser keep
+the one-finger scroll for itself. It has to be decided before the first gesture,
+because `touch-action` is read when a gesture begins.
 
 ## Caveats
 
