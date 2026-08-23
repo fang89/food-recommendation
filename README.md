@@ -20,39 +20,64 @@ actually serves it.
   the minus, and a Google Maps walking-directions link that routes from wherever the
   viewer happens to be.
 
+## Updating the list
+
+Anyone can add a row to the sheet. To pull those edits onto the page:
+
+```
+./update.sh
+git add -A && git commit -m "Refresh from sheet" && git push
+```
+
+That is the whole loop. `update.sh` runs two steps:
+
+**`build/refresh.py`** downloads the sheet, geocodes anything new, and rewrites
+`data/places.json`, `data/homes.json` and `data/mrt.json`. It is written to
+survive the sheet being edited by hand, because this one already has been:
+
+- the header row moves up and down as blank rows come and go, so it is found by
+  looking for `Name of place` rather than by row number
+- columns are matched by header text, so reordering or inserting one is fine
+- a rating typed into the **Minus** column instead of **Rating** is detected and
+  moved, with a warning naming the row
+- every address is geocoded twice, once by postal code and once by street name,
+  and a disagreement is reported — the postal-code match wins, since that is what
+  the sheet records
+- the map's bounding box is recomputed from the new points, so a place outside the
+  current coverage widens it automatically
+- only MRT stations that come out nearest to something are kept, so listing extra
+  candidates in `config.json` costs nothing
+
+Geocodes are cached in `build/geocache.json` (committed), so a refresh only calls
+OneMap for genuinely new addresses. `--force` re-resolves everything.
+
+**`build/build.py`** fetches the basemap for the current bounding box, transcodes
+it, and inlines Leaflet, the tiles and the data into a single `index.html`. Tiles
+are cached per bounding box, so a refresh that does not move the map reuses them.
+
+Read the warnings `refresh.py` prints. They are how the sheet tells you it has
+drifted.
+
+## Configuration
+
+`data/config.json` holds everything you would otherwise have to edit code for:
+the sheet id and URL, walking speed, display names for the homes, hand-written
+short labels for places whose names are too long for the map, the MRT candidate
+list, and the tile zoom range and quality.
+
 ## How it's built
 
 One self-contained `index.html`. Nothing is fetched at runtime except Google Fonts.
 
 - **Leaflet** is vendored into `vendor/`.
-- **The basemap is embedded.** A published page can't reach a tile server, so 212
-  CARTO tiles (zoom 15–17, @2x, both light and dark) are downloaded at build time,
-  transcoded PNG → WebP, and inlined as base64 data URIs. Zoom 18 is upscaled from
-  the z17 @2x tiles. That fixes coverage: the map is bounded to these three estates
-  and won't pan past the edge.
+- **The basemap is embedded.** A published page can't reach a tile server, so the
+  CARTO tiles (zoom 15-17, @2x, both light and dark) are downloaded at build time,
+  transcoded PNG to WebP, and inlined as base64 data URIs. Zoom 18 is upscaled from
+  the z17 @2x tiles. That fixes coverage: the map is bounded to these estates and
+  won't pan past the edge.
 - **Both themes ship.** The tile layer swaps with the viewer's light/dark setting.
-
-Rebuild with:
-
-```
-python3 build/build.py     # requires Pillow
-```
-
-Tiles are cached in `build/tiles.pkl` (gitignored) after the first run.
-
-## The data
-
-Places come from a Google Sheet — name, signature dish tried, plus, minus, rating out
-of 5, price band, address. The **Add a place to the sheet** button on the page links
-to it.
-
-Coordinates are resolved through [OneMap](https://www.onemap.gov.sg/), Singapore's
-national address database. Every address is geocoded twice — once by postal code, once
-by street — and the two are compared; where they disagree the postal-code match wins,
-since that's what the sheet records. Where a shop sits inside a larger building, the
-pin is the building.
-
-Place data lives near the top of the last `<script>` block in `build/template.html`.
+- **Place data is never hand-edited.** It comes from `data/*.json`, which comes from
+  the sheet.
 
 ## Caveats
 

@@ -1,0 +1,37 @@
+[
+ {
+  "code": "NE9",
+  "line": "NE",
+  "name": "Boon Keng",
+  "lat": 1.319336,
+  "lng": 103.861569
+ },
+ {
+  "code": "DT23",
+  "line": "DT",
+  "name": "Bendemeer",
+  "lat": 1.313673,
+  "lng": 103.862978
+ },
+ {
+  "code": "DT24",
+  "line": "DT",
+  "name": "Geylang Bahru",
+  "lat": 1.321301,
+  "lng": 103.871623
+ },
+ {
+  "code": "NE8",
+  "line": "NE",
+  "name": "Farrer Park",
+  "lat": 1.311906,
+  "lng": 103.853478
+ },
+ {
+  "code": "EW11",
+  "line": "EW",
+  "name": "Lavender",
+  "lat": 1.307378,
+  "lng": 103.862768
+ }
+]

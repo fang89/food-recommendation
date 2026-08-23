@@ -6,26 +6,32 @@ CARTO basemap is downloaded once, transcoded PNG -> WebP, and embedded as
 base64 data URIs. Leaflet is vendored locally for the same reason. The result
 is a single self-contained index.html that needs nothing but Google Fonts.
 
-    python3 build/build.py
+    python3 build/refresh.py    # pull the sheet, geocode, write data/*.json
+    python3 build/build.py      # inline everything, emit index.html
 
-Requires Pillow.  Place data lives in build/template.html, near the top of the
-final <script> block; edit it there and re-run.
+or just ./update.sh, which runs both.  Requires Pillow.  Place data comes from
+data/*.json and is never edited by hand.
 """
-import base64, io, json, math, os, pickle, time, urllib.request
+import base64, hashlib, io, json, math, os, pickle, time, urllib.request
 from PIL import Image
 
 ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TPL    = os.path.join(ROOT, "build", "template.html")
-CACHE  = os.path.join(ROOT, "build", "tiles.pkl")
+DATA   = os.path.join(ROOT, "data")
 OUT    = os.path.join(ROOT, "index.html")
 
-# Bounding box: every place, both homes, and all five MRT stations, padded.
-LAT0, LAT1 = 1.30620, 1.32400
-LNG0, LNG1 = 103.85230, 103.87340
-ZOOMS      = (15, 16, 17)          # z18 is upscaled from z17 @2x at runtime
-THEMES     = (("L", "light_all"), ("D", "dark_all"))
-QUALITY    = 74
-UA         = {"User-Agent": "food-recommendation build script"}
+THEMES = (("L", "light_all"), ("D", "dark_all"))   # z18 is upscaled from z17 @2x
+UA     = {"User-Agent": "food-recommendation build script"}
+
+
+def load(name):
+    return json.load(open(os.path.join(DATA, name)))
+
+
+def cache_path(bbox, zooms):
+    """Tiles are cached per bounding box, so moving the bbox refetches by itself."""
+    key = hashlib.sha1(json.dumps([bbox, zooms], sort_keys=True).encode()).hexdigest()[:10]
+    return os.path.join(ROOT, "build", "tiles-%s.pkl" % key)
 
 
 def tile_x(lng, z):
@@ -37,15 +43,16 @@ def tile_y(lat, z):
     return int((1.0 - math.log(math.tan(r) + 1 / math.cos(r)) / math.pi) / 2.0 * (2 ** z))
 
 
-def fetch_tiles():
-    if os.path.exists(CACHE):
-        print("using cached tiles:", CACHE)
-        return pickle.load(open(CACHE, "rb"))
+def fetch_tiles(bbox, zooms, quality):
+    cache = cache_path(bbox, zooms)
+    if os.path.exists(cache):
+        print("using cached tiles:", os.path.basename(cache))
+        return pickle.load(open(cache, "rb"))
     tiles, subs, i = {}, "abcd", 0
     for theme, slug in THEMES:
-        for z in ZOOMS:
-            for x in range(tile_x(LNG0, z), tile_x(LNG1, z) + 1):
-                for y in range(tile_y(LAT1, z), tile_y(LAT0, z) + 1):
+        for z in zooms:
+            for x in range(tile_x(bbox["lng0"], z), tile_x(bbox["lng1"], z) + 1):
+                for y in range(tile_y(bbox["lat1"], z), tile_y(bbox["lat0"], z) + 1):
                     url = ("https://%s.basemaps.cartocdn.com/%s/%d/%d/%d@2x.png"
                            % (subs[i % 4], slug, z, x, y))
                     i += 1
@@ -53,30 +60,42 @@ def fetch_tiles():
                         urllib.request.Request(url, headers=UA), timeout=30).read()
                     buf = io.BytesIO()
                     Image.open(io.BytesIO(data)).convert("RGB").save(
-                        buf, "WEBP", quality=QUALITY, method=6)
+                        buf, "WEBP", quality=quality, method=6)
                     tiles["%s/%d/%d/%d" % (theme, z, x, y)] = buf.getvalue()
                     time.sleep(0.035)
-    pickle.dump(tiles, open(CACHE, "wb"))
+    pickle.dump(tiles, open(cache, "wb"))
     print("fetched %d tiles" % len(tiles))
     return tiles
 
 
 def main():
-    tiles = fetch_tiles()
+    cfg = load("config.json")
+    zooms = tuple(cfg.get("zooms", [15, 16, 17]))
+    tiles = fetch_tiles(cfg["bbox"], zooms, cfg.get("tile_quality", 74))
     encoded = {k: base64.b64encode(v).decode("ascii") for k, v in tiles.items()}
     css = open(os.path.join(ROOT, "vendor", "leaflet.css")).read()
     css = css.replace("url(images/", "url(data:,#")   # default marker icons are unused
     js = open(os.path.join(ROOT, "vendor", "leaflet.js")).read()
 
+    runtime = {"bbox": cfg["bbox"], "walk": cfg.get("walk_speed_m_per_min", 80)}
+    subs = {
+        "/*__LEAFLET_CSS__*/": css,
+        "/*__LEAFLET_JS__*/":  js,
+        "/*__TILES__*/":       json.dumps(encoded, separators=(",", ":")),
+        "/*__CONFIG__*/":      json.dumps(runtime, separators=(",", ":")),
+        "/*__HOMES__*/":       json.dumps(load("homes.json"),  separators=(",", ":")),
+        "/*__MRT__*/":         json.dumps(load("mrt.json"),    separators=(",", ":")),
+        "/*__PLACES__*/":      json.dumps(load("places.json"), separators=(",", ":")),
+        "__SHEET_URL__":       cfg["sheet_url"],
+    }
     html = open(TPL).read()
-    for token in ("/*__LEAFLET_CSS__*/", "/*__LEAFLET_JS__*/", "/*__TILES__*/"):
+    for token, value in subs.items():
         assert token in html, "template is missing " + token
-    html = (html.replace("/*__LEAFLET_CSS__*/", css)
-                .replace("/*__LEAFLET_JS__*/", js)
-                .replace("/*__TILES__*/", json.dumps(encoded, separators=(",", ":"))))
+        html = html.replace(token, value)
 
     open(OUT, "w").write(html)
-    print("wrote %s  (%.2f MB, %d tiles)" % (OUT, os.path.getsize(OUT) / 1e6, len(encoded)))
+    print("wrote %s  (%.2f MB, %d places, %d tiles)"
+          % (OUT, os.path.getsize(OUT) / 1e6, len(load("places.json")), len(encoded)))
 
 
 if __name__ == "__main__":

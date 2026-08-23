@@ -221,7 +221,7 @@ tbody tr:last-child td{border-bottom:none}
   <header class="hero">
     <h1>Food recommendation</h1>
     <div class="cta">
-      <a class="addlink" href="https://docs.google.com/spreadsheets/d/1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q/edit?gid=1534632431#gid=1534632431" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
+      <a class="addlink" href="__SHEET_URL__" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
       <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — and it lands on this map at the next refresh.</p>
     </div>
   </header>
@@ -229,10 +229,7 @@ tbody tr:last-child td{border-bottom:none}
   <section>
     <div class="sec-head">
       <h2>Measured from</h2>
-      <div class="switch" role="group" aria-label="Choose which home to measure from">
-        <button type="button" data-home="A" aria-pressed="true">Boon Keng</button>
-        <button type="button" data-home="B" aria-pressed="false">Bay hse</button>
-      </div>
+      <div class="switch" id="switch" role="group" aria-label="Choose which home to measure from"></div>
       <span class="spacer"></span>
       <span class="note">Click any red marker or label for the card · scroll to zoom after clicking the map</span>
     </div>
@@ -290,53 +287,14 @@ tbody tr:last-child td{border-bottom:none}
 (function(){
   "use strict";
   var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-  var BOUNDS=L.latLngBounds([1.30620,103.85230],[1.32400,103.87340]);
+  var CFG=/*__CONFIG__*/;
+  var HOMES=/*__HOMES__*/;
+  var MRT=/*__MRT__*/;
+  var PLACES=/*__PLACES__*/;
 
-  var HOMES={
-    A:{key:"A", name:"Boon Keng", lat:1.31642489627751, lng:103.861501638313, dir:"right"},
-    B:{key:"B", name:"Bay hse",   lat:1.32282118210161, lng:103.869177870562, dir:"left"}
-  };
-
-  var MRT=[
-    {code:"NE9",  line:"NE", name:"Boon Keng",     lat:1.319336, lng:103.861569, dir:"right"},
-    {code:"DT23", line:"DT", name:"Bendemeer",     lat:1.313673, lng:103.862978, dir:"right"},
-    {code:"DT24", line:"DT", name:"Geylang Bahru", lat:1.321301, lng:103.871623, dir:"right"},
-    {code:"NE8",  line:"NE", name:"Farrer Park",   lat:1.311906, lng:103.853478, dir:"right"},
-    {code:"EW11", line:"EW", name:"Lavender",      lat:1.307378, lng:103.862768, dir:"right"}
-  ];
-
-  var PLACES=[
-    {id:"prince", name:"Prince Noodles @ ARC 380", short:"Prince Noodles", dish:"Ban mian",
-     lat:1.313217, lng:103.860335, addr:"380 Jalan Besar #01-10, 209000", price:"$",
-     plus:"Best banmian", minus:"Slightly salty", rating:4.0, dir:"left"},
-    {id:"kitchenman", name:"Kitchenman Nasi Lemak", short:"Kitchenman", dish:"Nasi lemak",
-     lat:1.312217, lng:103.862824, addr:"2 Kallang Ave #01-08/13, CT Hub, 339407", price:"$",
-     plus:"Village park style nasi lemak", minus:"1 hr wait", rating:4.0, dir:"right"},
-    {id:"chengmun", name:"Cheng Mun Chee Kee Pig Organ Soup", short:"Cheng Mun Chee Kee", dish:"Pig organ soup",
-     lat:1.312202, lng:103.860048, addr:"24 Foch Road, 209263", price:"$",
-     plus:"Cheap and taste home cooked", minus:"Slightly warm place", rating:4.0, dir:"left"},
-    {id:"mookata", name:"New Udon Mookata", short:"New Udon Mookata", dish:"Mookata",
-     lat:1.311901, lng:103.861540, addr:"119 Lavender Street, 338731", price:"$$",
-     plus:"Good pork", minus:"Stomachache the day after", rating:4.0, dir:"right"},
-    {id:"char", name:"Char", short:"Char", dish:"Char siew",
-     lat:1.316116, lng:103.858247, addr:"454 Race Course Road, 218697", price:"$$",
-     plus:"Nice. Good wasabi sauce", minus:"Oily charsiew, slightly expensive", rating:3.5, dir:"left"},
-    {id:"beachroad", name:"Beach Road Scissor-Cut Curry Rice", short:"Beach Rd Scissor-Cut", dish:"Curry rice",
-     lat:1.309523, lng:103.857742, addr:"229 Jalan Besar, 208905", price:"$",
-     plus:"", minus:"", rating:3.5, dir:"left"},
-    {id:"imem", name:"Im-Em Thai Kitchen", short:"Im-Em Thai Kitchen", dish:"Pad Thai",
-     lat:1.309711, lng:103.864326, addr:"12 Kallang Ave #01-40, Aperia, 339511", price:"$$",
-     plus:"", minus:"", rating:3.5, dir:"right"},
-    {id:"roast", name:"88 Hong Kong Roast Meat Specialist", short:"88 Hong Kong Roast Meat", dish:"Char siew, sio ba",
-     lat:1.315193, lng:103.859760, addr:"308 Lavender Street, 338814", price:"$",
-     plus:"Nice", minus:"Oily", rating:3.0, dir:"left"},
-    {id:"moon", name:"Moonchild", short:"Moonchild", dish:"Cold brew coffee",
-     lat:1.312387, lng:103.859367, addr:"351 Jalan Besar #01-01, 208988", price:"$$",
-     plus:"Good coffee, good mains", minus:"Slightly expensive", rating:3.0, dir:"left"},
-    {id:"sweetcheeks", name:"Sweet Cheeks", short:"Sweet Cheeks", dish:"Ice cream",
-     lat:1.311711, lng:103.860112, addr:"147 Tyrwhitt Road, 207561", price:"$$",
-     plus:"", minus:"", rating:2.5, dir:"bottom"}
-  ];
+  var BOUNDS=L.latLngBounds([CFG.bbox.lat0,CFG.bbox.lng0],[CFG.bbox.lat1,CFG.bbox.lng1]);
+  var BY_CODE={}; MRT.forEach(function(s){ BY_CODE[s.code]=s; });
+  PLACES.forEach(function(p){ p.mrt=BY_CODE[p.mrt]; p.mrtW=Math.max(1,Math.round(p.mrtD/CFG.walk)); });
 
   var COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
   var NICE=[50,100,200,250,500,1000,2000];
@@ -352,7 +310,7 @@ tbody tr:last-child td{border-bottom:none}
   function fmtM(d){ return Math.round(d).toLocaleString("en-US")+" m"; }
   function fmtRing(m){ return m>=1000 ? (m/1000).toFixed(m%1000?1:0)+" km" : m+" m"; }
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-  function walkMin(d){ return Math.max(1,Math.round(d/80)); }
+  function walkMin(d){ return Math.max(1,Math.round(d/CFG.walk)); }
   function isDark(){
     var r=document.documentElement.getAttribute("data-theme");
     if(r==="dark") return true;
@@ -377,12 +335,6 @@ tbody tr:last-child td{border-bottom:none}
            p.lat.toFixed(6)+","+p.lng.toFixed(6)+"&travelmode=walking";
   }
 
-  PLACES.forEach(function(p){
-    var best=null;
-    MRT.forEach(function(s){ var d=dist(p,s); if(!best||d<best.d) best={s:s,d:d}; });
-    p.mrt=best.s; p.mrtD=best.d; p.mrtW=walkMin(best.d);
-  });
-
   var Embedded=L.TileLayer.extend({
     initialize:function(theme,opts){ this._theme=theme; L.TileLayer.prototype.initialize.call(this,"",opts); },
     getTileUrl:function(c){
@@ -406,7 +358,7 @@ tbody tr:last-child td{border-bottom:none}
   map.getContainer().addEventListener("click",function(){ map.scrollWheelZoom.enable(); });
   map.getContainer().addEventListener("mouseleave",function(){ map.scrollWheelZoom.disable(); });
 
-  var state={home:"A", sel:null, sortKey:"rating", sortDir:-1};
+  var state={home:0, sel:null, sortKey:"rating", sortDir:-1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
     dist:function(a,b){ return a.d-b.d; },
@@ -456,8 +408,7 @@ tbody tr:last-child td{border-bottom:none}
     if(t){ lastMarkerClick=Date.now(); select(t.dataset.place); }
   });
 
-  ["A","B"].forEach(function(k){
-    var h=HOMES[k];
+  HOMES.forEach(function(h,k){
     var m=L.marker([h.lat,h.lng],{
       icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'"><i></i></span>', iconSize:[21,21], iconAnchor:[10.5,10.5]}),
       keyboard:false, zIndexOffset:1000
@@ -466,6 +417,10 @@ tbody tr:last-child td{border-bottom:none}
     m.on("click",function(){ lastMarkerClick=Date.now(); setHome(k); });
     homeMarkers[k]=m;
   });
+
+  document.getElementById("switch").innerHTML=HOMES.map(function(h,k){
+    return '<button type="button" data-home="'+k+'" aria-pressed="'+(k===state.home)+'">'+esc(h.name)+'</button>';
+  }).join("");
 
   map.on("click",function(){ if(Date.now()-lastMarkerClick<80) return; select(null); });
   function syncZoomClass(){ map.getContainer().classList.toggle("zoomed-out", map.getZoom()<15.9); }
@@ -554,9 +509,9 @@ tbody tr:last-child td{border-bottom:none}
         '</div>');
     });
 
-    ["A","B"].forEach(function(k){
+    HOMES.forEach(function(h,k){
       var act=state.home===k;
-      homeMarkers[k].setTooltipContent(esc(HOMES[k].name));
+      homeMarkers[k].setTooltipContent(esc(h.name));
       var el=homeMarkers[k].getElement(); if(el){ var sp=el.querySelector(".hm"); if(sp) sp.classList.toggle("off",!act); }
       var ht=homeMarkers[k].getTooltip(), he=ht&&ht.getElement&&ht.getElement();
       if(he) he.classList.toggle("on",act);
@@ -591,11 +546,12 @@ tbody tr:last-child td{border-bottom:none}
     document.getElementById("colo").textContent=
       PLACES.length+" places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
     Array.prototype.forEach.call(document.querySelectorAll(".switch button"),function(b){
-      b.setAttribute("aria-pressed", b.dataset.home===state.home?"true":"false");
+      b.setAttribute("aria-pressed", +b.dataset.home===state.home?"true":"false");
     });
   }
 
   function setHome(k){
+    k=+k;
     if(!HOMES[k]||state.home===k) return;
     state.home=k; draw();
     if(state.sel) placeMarkers[state.sel].openPopup();
