@@ -103,7 +103,7 @@ var L={
       getContainer:function(){ return new El("mapc"); },
       getZoom:function(){ return 16; },
       fitBounds:function(){ note("fitBounds"); },
-      setView:function(){}, removeLayer:function(){}, addLayer:function(){},
+      setView:function(){ note("setView"); }, removeLayer:function(){}, addLayer:function(){},
       invalidateSize:function(){},
       scrollWheelZoom:{enable:function(){}, disable:function(){}}
     };
@@ -177,6 +177,20 @@ if(!__calls["html:rows"]) throw new Error("the table body was never written - th
 if(!__calls["html:switch"]) throw new Error("the datum switch was never written");
 if(!__calls["circleMarker"]) throw new Error("no place markers were created");
 
+// Every home the build kept must be plottable, and switching to one must both
+// change the datum and recentre the map on it.
+HOMES.forEach(function(h){
+  if(typeof h.lat!=="number" || typeof h.lng!=="number")
+    throw new Error("home " + h.name + " has no coordinates");
+});
+if(HOMES.length>1){
+  var views=__calls["setView"]||0, was=state.home;
+  setHome(was===0?1:0);
+  if(state.home===was) throw new Error("switching home did not change the datum");
+  if((__calls["setView"]||0)<=views)
+    throw new Error("switching home did not recentre the map on that home");
+}
+
 // The "Pull from sheet" button must survive a whole round trip: fetch the CSV,
 // parse it, geocode the rows this build has never seen, redraw the table.
 var built = __calls["html:rows"];
@@ -215,7 +229,8 @@ if(!pulled["Slipped Twice"] || pulled["Slipped Twice"].rating!==3.5)
 if(pulled["Slipped Twice"].plus!=="")
   throw new Error("a rating recovered from Plus was left behind in Plus as well");
 
-"ok " + __calls["circleMarker"] + " markers, " + __calls["circle"] + " rings, pull ok";
+"ok " + __calls["circleMarker"] + " markers, " + __calls["circle"] + " rings, " +
+  HOMES.length + " homes, pull ok";
 """
 
 

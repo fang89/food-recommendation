@@ -11,9 +11,10 @@ actually serves it.
 - **A real street map** with every place pinned, plus the five MRT stations that come
   out nearest to something on the list — drawn in their real line colours (NE purple,
   DT blue, EW green).
-- **Two datums.** Click either home marker, or the switch above the map, and the
+- **Three datums.** Click any home marker, or the switch above the map, and the
   distance rings, measured runs, distances, bearings and walking times all recompute
-  from that door.
+  from that door — and the map recentres on it, since that is what you are now
+  measuring from.
 - **A sortable list.** Sort by place, rating, price, distance from the active door, or
   walk to the nearest MRT. Clicking a row finds that place on the map.
 - **A card per place** on click — rating, price band, distance, station, the plus and
@@ -103,6 +104,19 @@ page looks, so still open it.
 
 Read the warnings `refresh.py` prints. They are how the sheet tells you it has
 drifted.
+
+### When a home will not geocode
+
+A home is located from the postal code on the sheet's other tab, and only its
+coordinates are written into `data/homes.json` — the postal code itself never
+reaches this repo or the page.
+
+If OneMap cannot resolve one, `refresh.py` says so by label and leaves that home
+off the map rather than guessing. To place it anyway, add coordinates under
+`home_overrides` in `data/config.json`, keyed by the label on the sheet. That
+file is public, so an override holds coordinates, not a postal code or a block
+number — nothing more identifying than the page already ships. Delete the entry
+once the sheet's own code resolves.
 
 ## Configuration
 

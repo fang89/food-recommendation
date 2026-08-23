@@ -3,12 +3,18 @@
   "name": "Boon Keng",
   "lat": 1.31642489627751,
   "lng": 103.861501638313,
-  "dir": "right"
+  "dir": "left"
  },
  {
   "name": "Bay hse",
   "lat": 1.32282118210161,
   "lng": 103.869177870562,
-  "dir": "left"
+  "dir": "right"
+ },
+ {
+  "name": "Ben hse",
+  "lat": 1.31804081085615,
+  "lng": 103.874222824064,
+  "dir": "right"
  }
 ]

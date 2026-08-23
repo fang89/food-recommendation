@@ -574,8 +574,20 @@ tbody tr:last-child td{border-bottom:none}
     k=+k;
     if(!HOMES[k]||state.home===k) return;
     state.home=k; draw();
+    recentre(HOMES[k]);
     if(state.sel) placeMarkers[state.sel].openPopup();
     document.getElementById("live").textContent="Measuring from "+HOMES[k].name+".";
+  }
+
+  // Switching datum re-measures everything from a different door, so put that
+  // door in the middle. Keep the viewer's zoom - they chose it - but come in to
+  // 15 if they are far enough out that a house is not a meaningful centre.
+  // maxBounds clamps the pan for a home near the edge, which is the right
+  // answer: the tiles stop there.
+  function recentre(H){
+    var still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    map.setView([H.lat,H.lng], Math.max(map.getZoom(), 15),
+                {animate:!still, duration:.6});
   }
   function select(id){
     state.sel=(id && state.sel!==id) ? id : null;

@@ -205,7 +205,8 @@ def geocode(address, cache, warnings, force=False, private=False):
 
     chosen = best or alt
     if not chosen:
-        warnings.append("%s: OneMap found nothing - not plotted." % address)
+        if not private:
+            warnings.append("%s: OneMap found nothing - not plotted." % address)
         return None
     if best and alt:
         far = abs(float(best["LATITUDE"]) - float(alt["LATITUDE"])) > 1e-5 or \
@@ -331,11 +332,24 @@ def main():
         hit = geocode(rec["addr"], cache, warnings, args.force)
         if hit:
             rec.update(lat=hit["lat"], lng=hit["lng"], matched=hit["matched"])
+    overrides = cfg.get("home_overrides", {})
     for home in homes:
-        hit = geocode(home.pop("postal"), cache, warnings, args.force, private=True)
+        postal = home.pop("postal")
+        fix = overrides.get(home["name"])
+        if fix:
+            home.update(lat=fix["lat"], lng=fix["lng"])
+            warnings.append("%s: placed from config.home_overrides, not from the "
+                            "sheet. %s" % (home["name"], fix.get("why", "")))
+            continue
+        hit = geocode(postal, cache, warnings, args.force, private=True)
         if hit:
             home.update(lat=hit["lat"], lng=hit["lng"])
             home.pop("matched", None)
+        else:
+            warnings.append("%s: its code on the sheet does not resolve, so this "
+                            "home is NOT on the map. Fix the sheet, or add "
+                            "coordinates under home_overrides in config.json."
+                            % home["name"])
     # Belt and braces: drop any bare postal-code key an older build cached
     # before home lookups were made private. Place keys are full addresses.
     for key in [k for k in cache if re.fullmatch(r"\d{6}", k)]:
@@ -363,8 +377,9 @@ def main():
     mid = sum(p["lng"] for p in places) / len(places)
     for rec in places:
         rec["dir"] = "right" if rec["lng"] >= mid else "left"
-    for i, home in enumerate(homes):
-        home["dir"] = "right" if i == 0 else "left"
+    hmid = sum(h["lng"] for h in homes) / len(homes)
+    for home in homes:
+        home["dir"] = "right" if home["lng"] >= hmid else "left"
 
     # Bbox must cover everything drawn, or tiles run out at the edge.
     pad  = cfg.get("bbox_pad_deg", 0.0012)
