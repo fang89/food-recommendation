@@ -166,11 +166,11 @@ var SHEET_CSV=[
   ",,,,,,,,",
   ",Food places,,,,,,,",
   ",,,,,,,,",
-  ",Name of place,Signature dish tried,Plus,Minus,Rating (5 pt system),Price band,Link / Address,Other comments",
-  ",Smoke Cafe,toast,\"bright, cheap\",queue,4.5,$,\"1 Test Rd, Singapore 209263\",",
-  ",Rating Slipped,noodles,good,4.0,,$$,\"2 Test Rd, Singapore 338731\",",
-  ",\"Comma, Inc\",rice,,,3.0,$,\"3 Test Rd, Singapore 208905\",",
-  ",Slipped Twice,curry,3.5,,,$,\"4 Test Rd, Singapore 207561\","
+  ",Name of place,Category,Plus,Minus,Rating (5 pt system),Price band,Link / Address,Other comments",
+  ",Smoke Cafe,Cafe,\"bright, cheap\",queue,4.5,$,\"1 Test Rd, Singapore 209263\",",
+  ",Rating Slipped,Hawker food,good,4.0,,$$,\"2 Test Rd, Singapore 338731\",",
+  ",\"Comma, Inc\",Chinese food,,,3.0,$,\"3 Test Rd, Singapore 208905\",",
+  ",Slipped Twice,Dessert,3.5,,,$,\"4 Test Rd, Singapore 207561\","
 ].join("\n");
 
 var __fetched=[];
@@ -200,6 +200,18 @@ if(__els["map"] && /failed to draw/.test(__els["map"].innerHTML))
   throw new Error("the page caught its own error and painted the apology: "+
                   String(__els["map"].innerHTML).replace(/<[^>]*>/g," ").slice(0,220));
 if(!__calls["map"])       throw new Error("map was never created");
+if(STATIONS.length<100)
+  throw new Error("only " + STATIONS.length + " stations shipped - the nearest-MRT column "+
+                  "would be answered from the neighbourhood, which is how a place in "+
+                  "Chinatown came back as Farrer Park");
+(function(){
+  // A place well outside the drawn area must still get a station near it, not
+  // the nearest of the few pills on the map.
+  var far=nearestStation({lat:1.28436, lng:103.843427});   // Chinatown MRT itself
+  if(far.mrtD>400)
+    throw new Error("the nearest station to Chinatown came back " + far.mrtD +
+                    " m away (" + far.mrt.name + ") - the candidate set is too small");
+})();
 if(!__calls["attrPrefix"]) throw new Error("the attribution prefix was left at Leaflet's default, which carries the flag");
 
 // Zoom gestures. A plain wheel has to fall through to the page - the map is a
@@ -285,8 +297,8 @@ if(!pulled["Smoke Cafe"] || pulled["Smoke Cafe"].rating!==4.5)
 if(!pulled["Comma, Inc"] || pulled["Comma, Inc"].price!=="$")
   throw new Error("the Price column was not read - quoted-comma row came back as " +
                   (pulled["Comma, Inc"] && pulled["Comma, Inc"].price));
-if(pulled["Smoke Cafe"].dish!=="toast")
-  throw new Error("the Signature dish column was not read");
+if(pulled["Smoke Cafe"].cat!=="Cafe")
+  throw new Error("the Category column was not read");
 if(pulled["Smoke Cafe"].plus!=="bright, cheap")
   throw new Error("a quoted comma broke the CSV parser");
 // Ratings that slipped left must be recovered - one column, and two.

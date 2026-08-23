@@ -20,6 +20,7 @@
   --accent:#A82F26; --accent-ink:#8E271F; --accent-wash:rgba(168,47,38,.07); --on-accent:#FFF7F5;
   --halo:rgba(248,250,251,.93);
   --ne:#9E28B5; --dt:#005EC4; --ew:#00803A;
+  --ns:#C6301A; --cc:#D08700; --te:#8A5525;
   --shadow:0 1px 2px rgba(19,28,36,.05), 0 8px 24px -12px rgba(19,28,36,.18);
   --display:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --body:"Newsreader",Georgia,"Times New Roman",serif;
@@ -33,6 +34,7 @@
     --accent:#E4726A; --accent-ink:#F0938C; --accent-wash:rgba(228,114,106,.10); --on-accent:#14191C;
     --halo:rgba(21,30,36,.93);
     --ne:#C462D6; --dt:#4D93E8; --ew:#3FBE74;
+  --ns:#EF6A54; --cc:#E8A93A; --te:#C08A55;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
@@ -43,6 +45,7 @@
   --accent:#E4726A; --accent-ink:#F0938C; --accent-wash:rgba(228,114,106,.10); --on-accent:#14191C;
   --halo:rgba(21,30,36,.93);
   --ne:#C462D6; --dt:#4D93E8; --ew:#3FBE74;
+  --ns:#EF6A54; --cc:#E8A93A; --te:#C08A55;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 
@@ -93,6 +96,16 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .switch button:hover{background:var(--sheet-2); color:var(--ink)}
 .switch button[aria-pressed="true"]{background:var(--accent); color:var(--on-accent)}
 .switch button:focus-visible{outline:2px solid var(--accent); outline-offset:-3px}
+
+.chips{display:flex; flex-wrap:wrap; gap:7px; margin:-2px 0 13px}
+.chip{appearance:none; font-family:var(--mono); font-size:10.5px; font-weight:500;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2);
+  background:var(--sheet); border:1px solid var(--rule); border-radius:100px;
+  padding:6px 13px; cursor:pointer; transition:color .15s, background .15s, border-color .15s}
+.chip:hover{color:var(--ink); border-color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.chip b{font-weight:500; opacity:.6; margin-left:6px}
 
 /* ---- map ---- */
 .mapcard{background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow); overflow:hidden; margin:0}
@@ -162,7 +175,7 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 
 .card{display:flex; flex-direction:column}
 .card-head{padding:15px 17px 13px; border-bottom:1px solid var(--rule-soft); background:var(--sheet-2)}
-.card-dish{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+.card-cat{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
   color:var(--accent-ink); margin:0 0 5px}
 .card-name{font-family:var(--display); font-weight:700; font-size:17px; line-height:1.18; letter-spacing:-.018em;
   color:var(--ink); margin:0 22px 0 0; text-wrap:balance}
@@ -225,11 +238,15 @@ td{padding:13px 14px; border-bottom:1px solid var(--rule-soft); vertical-align:t
 tbody tr:last-child td{border-bottom:none}
 .c-rank{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--accent); letter-spacing:.08em; width:1%; padding-top:16px}
 .c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
-.c-dish{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
+.c-cat{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
 .c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
 .c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
 .pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
 .pill.NE{background:var(--ne)} .pill.DT{background:var(--dt)} .pill.EW{background:var(--ew)}
+/* The rest of the network. Only these three lines are drawn on the map, but
+   any station can be named in the table, so every line needs its colour. */
+.pill.NS{background:var(--ns)} .pill.CC{background:var(--cc)} .pill.CE{background:var(--cc)}
+.pill.TE{background:var(--te)} .pill.CG{background:var(--ew)}
 .c-stn{display:block; font-family:var(--mono); font-size:11px; color:var(--ink-2); margin-top:4px; white-space:nowrap; font-variant-numeric:tabular-nums}
 .stars{display:inline-flex; gap:2.5px; align-items:center; vertical-align:middle}
 .stars i{width:9px; height:9px; border-radius:50%; background:var(--rule); display:block}
@@ -277,7 +294,7 @@ html{-webkit-text-size-adjust:100%}
     <h1>Food recommendation</h1>
     <div class="cta">
       <a class="addlink" href="__SHEET_URL__" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
-      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — then press <b class="inl">Pull from sheet</b> to see it here straight away.</p>
+      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, category, plus, minus, rating, price band, address — then press <b class="inl">Pull from sheet</b> to see it here straight away.</p>
       <button class="pull" id="pull" type="button">Pull from sheet &#8635;</button>
     </div>
     <p class="pullnote" id="pullnote" role="status" aria-live="polite"></p>
@@ -315,6 +332,7 @@ html{-webkit-text-size-adjust:100%}
       <h2>The list</h2>
       <span class="note">Click a column to sort · click a row to find it on the map</span>
     </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
     <div class="tablewrap">
       <table id="list">
         <thead>
@@ -347,10 +365,16 @@ html{-webkit-text-size-adjust:100%}
   try{
   var CFG=/*__CONFIG__*/;
   var HOMES=/*__HOMES__*/;
-  var MRT=/*__MRT__*/;
+  var MRT=/*__MRT__*/;            // drawn on the map: the neighbourhood
+  var STATIONS=/*__STATIONS__*/;  // the whole network: who is nearest, really
   var PLACES=/*__PLACES__*/;
 
-  var BY_CODE={}; MRT.forEach(function(s){ BY_CODE[s.code]=s; });
+  // Any station can be named in the table, so the lookup spans the network.
+  // The drawn ones are laid over the top - same records, and it keeps the map
+  // working if a station is ever hand-edited in data/mrt.json.
+  var BY_CODE={};
+  STATIONS.forEach(function(s){ BY_CODE[s.code]=s; });
+  MRT.forEach(function(s){ BY_CODE[s.code]=s; });
   PLACES.forEach(function(p){ p.mrt=BY_CODE[p.mrt]; p.mrtW=Math.max(1,Math.round(p.mrtD/CFG.walk)); });
 
   var COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
@@ -473,7 +497,7 @@ html{-webkit-text-size-adjust:100%}
     if(e.touches && e.touches.length===1) hint();
   },{passive:true});
 
-  var state={home:0, sel:null, sortKey:"rating", sortDir:-1};
+  var state={home:0, sel:null, cat:null, sortKey:"rating", sortDir:-1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
     near:function(a,b){ return a.rank-b.rank; },
@@ -515,6 +539,7 @@ html{-webkit-text-size-adjust:100%}
       el.setAttribute("aria-label",p.name);
       el.dataset.place=p.id;
     }
+    hit._shown=true;
     placeMarkers[p.id]=hit;
     return hit;
   }
@@ -546,6 +571,56 @@ html{-webkit-text-size-adjust:100%}
   function syncZoomClass(){ map.getContainer().classList.toggle("zoomed-out", map.getZoom()<15.9); }
   map.on("zoomend",syncZoomClass);
 
+  // Hidden means off the map, not merely faint: a pin you cannot click but
+  // can still see is the thing that makes a filter feel broken.
+  function showPlace(id,on){
+    var m=placeMarkers[id]; if(!m || m._shown===on) return;
+    m._shown=on;
+    [m,m._ring,m._dot].forEach(function(l){ if(on) l.addTo(map); else map.removeLayer(l); });
+  }
+
+  function drawEmpty(H){
+    gRings.clearLayers(); gLines.clearLayers();
+    document.getElementById("rows").innerHTML=
+      '<tr><td colspan="8" class="c-none" style="padding:22px 14px">Nothing in that category.</td></tr>';
+    document.getElementById("capRing").textContent="no places shown";
+  }
+
+  var CATS=(function(){
+    var n={}, order=[];
+    PLACES.forEach(function(p){
+      var c=p.cat||"Uncategorised";
+      if(!(c in n)){ n[c]=0; order.push(c); }
+      n[c]++;
+    });
+    order.sort(function(a,b){ return n[b]-n[a] || a.localeCompare(b); });
+    return order.map(function(c){ return {name:c, n:n[c]}; });
+  })();
+
+  function drawChips(){
+    var box=document.getElementById("chips");
+    box.innerHTML='<button type="button" class="chip" data-cat="" aria-pressed="'+
+      (state.cat?"false":"true")+'">All<b>'+PLACES.length+'</b></button>'+
+      CATS.map(function(c){
+        return '<button type="button" class="chip" data-cat="'+esc(c.name)+'" aria-pressed="'+
+               (state.cat===c.name?"true":"false")+'">'+esc(c.name)+'<b>'+c.n+'</b></button>';
+      }).join("");
+  }
+  document.getElementById("chips").addEventListener("click",function(e){
+    var b=e.target.closest(".chip"); if(!b) return;
+    var want=b.dataset.cat||null;
+    state.cat=(state.cat===want)?null:want;
+    // A selection that the filter just hid would leave a popup open over a
+    // place no longer in the list, so let it go.
+    if(state.sel){
+      var sp=byId(state.sel);
+      if(sp && state.cat && sp.cat!==state.cat) state.sel=null;
+    }
+    drawChips(); draw();
+    document.getElementById("live").textContent=
+      state.cat ? ("Showing "+state.cat+" only.") : "Showing every category.";
+  });
+
   function paint(m,on,hover){
     var acc=css("--accent");
     m._dot.setStyle({color:css("--sheet"), fillColor:acc});
@@ -556,7 +631,8 @@ html{-webkit-text-size-adjust:100%}
 
   function rows(){
     var H=HOMES[state.home];
-    return PLACES.map(function(p){
+    return PLACES.filter(function(p){ return !state.cat || p.cat===state.cat; })
+      .map(function(p){
       var d=dist(H,p), b=bearing(H,p);
       return {p:p,d:d,b:b,cp:COMPASS[Math.floor(((b+11.25)%360)/22.5)],walk:walkMin(d)};
     }).sort(function(x,y){ return x.d-y.d; });
@@ -571,7 +647,15 @@ html{-webkit-text-size-adjust:100%}
   }
 
   function draw(){
-    var H=HOMES[state.home], R=rows(), max=R[R.length-1].d;
+    var H=HOMES[state.home], R=rows();
+
+    // A filter takes places off the map as well as out of the table, so the
+    // two always agree about what you are looking at.
+    var shown={}; R.forEach(function(row){ shown[row.p.id]=1; });
+    PLACES.forEach(function(p){ showPlace(p.id, !!shown[p.id]); });
+    if(!R.length){ drawEmpty(H); return; }
+
+    var max=R[R.length-1].d;
     var inkDim=css("--ink-3"), acc=css("--accent");
 
     var step=NICE[0];
@@ -606,7 +690,7 @@ html{-webkit-text-size-adjust:100%}
       m.setPopupContent(
         '<div class="card">'+
           '<div class="card-head">'+
-            '<p class="card-dish">'+esc(p.dish)+'</p>'+
+            '<p class="card-cat">'+esc(p.cat)+'</p>'+
             '<h3 class="card-name">'+esc(p.name)+'</h3>'+
           '</div>'+
           '<div class="card-grid">'+
@@ -643,7 +727,7 @@ html{-webkit-text-size-adjust:100%}
       var p=row.p, on=state.sel===p.id;
       return '<tr data-place="'+p.id+'" tabindex="0" aria-selected="'+(on?"true":"false")+'">'+
         '<td class="num c-rank">'+row.rank+'</td>'+
-        '<td class="c-name">'+esc(p.name)+'<span class="c-dish">'+esc(p.dish)+'</span></td>'+
+        '<td class="c-name">'+esc(p.name)+'<span class="c-cat">'+esc(p.cat)+'</span></td>'+
         '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
         '<td>'+priceBar(p.price)+'</td>'+
         '<td class="c-note">'+noteHTML(p)+'</td>'+
@@ -777,8 +861,9 @@ html{-webkit-text-size-adjust:100%}
 
   // Same column rules as build/refresh.py, so a pull and a rebuild agree:
   // these are PREFIXES, because the real headers are qualified - "Rating
-  // (5 pt system)", "Price band", "Signature dish tried".
-  var COLS=[["name of place","name"],["signature dish","dish"],["plus","plus"],
+  // (5 pt system)", "Price band". "Category" replaced "Signature dish
+  // tried" in the sheet, so both prefixes are listed and the first present wins.
+  var COLS=[["name of place","name"],["category","cat"],["signature dish","cat"],["plus","plus"],
             ["minus","minus"],["rating","rating"],["price","price"],
             ["link / address","addr"],["address","addr"]];
 
@@ -808,7 +893,7 @@ html{-webkit-text-size-adjust:100%}
     for(var r=head+1;r<rows.length;r++){
       var line=rows[r];
       var cell=function(f){ var x=col[f]; return x===undefined?"":(line[x]||"").trim(); };
-      var rec={name:cell("name"), dish:cell("dish"), plus:cell("plus"),
+      var rec={name:cell("name"), cat:cell("cat"), plus:cell("plus"),
                minus:cell("minus"), addr:cell("addr"), price:cell("price"),
                rating:cell("rating")};
       if(!rec.name||!rec.addr) continue;
@@ -817,7 +902,7 @@ html{-webkit-text-size-adjust:100%}
       // one row has it in Minus, another has slipped two columns into Plus.
       // Same recovery as build/refresh.py, in the same order.
       if(!rec.rating){
-        var slots=["minus","plus","dish"];
+        var slots=["minus","plus","cat"];
         for(var t=0;t<slots.length;t++){
           var text=(rec[slots[t]]||"").trim();
           if(!/^\d+(\.\d+)?$/.test(text)) continue;
@@ -854,9 +939,11 @@ html{-webkit-text-size-adjust:100%}
     return (cut||stem.slice(0,24))+"…";
   }
 
+  // Against the whole network, not the stations on the map. A place outside
+  // the neighbourhood has a nearest station too, and it is not Farrer Park.
   function nearestStation(pt){
-    var best=MRT[0], bd=Infinity;
-    MRT.forEach(function(s){ var d=dist(pt,s); if(d<bd){ bd=d; best=s; } });
+    var best=STATIONS[0], bd=Infinity;
+    STATIONS.forEach(function(s){ var d=dist(pt,s); if(d<bd){ bd=d; best=s; } });
     return {mrt:best, mrtD:Math.round(bd)};
   }
 
@@ -872,11 +959,11 @@ html{-webkit-text-size-adjust:100%}
       var old=byAddr[rec.addr];
       if(old){
         delete byAddr[rec.addr];
-        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.dish].join("");
-        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.dish].join("");
+        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.cat].join("");
+        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.cat].join("");
         if(was!==now) changed++;
         old.name=rec.name; old.rating=rec.rating; old.price=rec.price;
-        old.plus=rec.plus; old.minus=rec.minus; old.dish=rec.dish;
+        old.plus=rec.plus; old.minus=rec.minus; old.cat=rec.cat;
         old.short=shortName(rec.name);
         kept.push(old);
       } else {
@@ -962,12 +1049,20 @@ html{-webkit-text-size-adjust:100%}
   new MutationObserver(function(){ setTiles(); draw(); })
     .observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
+  // Open on the neighbourhood, not on every place in the list. Once the sheet
+  // grew a restaurant in Chinatown, fitting to all of them zoomed out to half
+  // the island and left the streets this map is about as a smudge. The
+  // neighbourhood is the places served by the stations the map actually draws;
+  // anything further out still has its pin, and its row still flies you there.
+  var DRAWN={}; MRT.forEach(function(s){ DRAWN[s.code]=1; });
+  var local=PLACES.filter(function(p){ return DRAWN[p.mrt.code]; });
   map.fitBounds(L.latLngBounds(
-    PLACES.map(function(p){return [p.lat,p.lng];})
+    (local.length?local:PLACES).map(function(p){return [p.lat,p.lng];})
       .concat(MRT.map(function(s){return [s.lat,s.lng];}))
       .concat(HOMES.map(function(h){return [h.lat,h.lng];}))
   ).pad(.06),{maxZoom:16});
   syncZoomClass();
+  drawChips();
   draw();
   }catch(err){
     // A blank map and an empty table are indistinguishable from "no data".

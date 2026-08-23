@@ -29,7 +29,7 @@ ONEMAP   = "https://www.onemap.gov.sg/api/common/elastic/search"
 
 # Header text -> field name.  Matching is case-insensitive on the prefix, so
 # "Rating (5 pt system)" and a later "Rating /5" both land on `rating`.
-COLUMNS = [("name of place", "name"), ("signature dish", "dish"), ("plus", "plus"),
+COLUMNS = [("name of place", "name"), ("category", "cat"), ("signature dish", "cat"), ("plus", "plus"),
            ("minus", "minus"), ("rating", "rating"), ("price", "price"),
            ("link / address", "addr"), ("address", "addr")]
 
@@ -114,7 +114,7 @@ def parse_places(rows, warnings):
         # A prose field holding nothing but a bare 0-5 number is a rating.
         if not rec.get("rating"):
             for field, column in (("minus", "Minus"), ("plus", "Plus"),
-                                  ("dish", "Signature dish")):
+                                  ("cat", "Category")):
                 text = rec.get(field, "").strip()
                 if not text:
                     continue
@@ -139,7 +139,7 @@ def parse_places(rows, warnings):
         rec["price"] = band[:3]
         rec["plus"]  = rec.get("plus", "")
         rec["minus"] = rec.get("minus", "")
-        rec["dish"]  = rec.get("dish", "")
+        rec["cat"]   = rec.get("cat", "")
         out.append(rec)
     return out
 
@@ -302,6 +302,62 @@ def csv_crosscheck(cfg, places, warnings):
 
 # ------------------------------------------------------------------ main ----
 
+STATIONS = os.path.join(DATA, "stations.json")
+
+
+def load_stations(cfg, warnings):
+    """Every MRT station in Singapore, from OneMap, cached in data/stations.json.
+
+    OneMap indexes each station once per exit, so the station records are the
+    ones whose name ends in a code in brackets - "CHINATOWN MRT STATION (NE4)".
+    An interchange appears once per line and keeps whichever code is nearer;
+    both are true answers to "which station is this".
+    """
+    if os.path.exists(STATIONS):
+        return json.load(open(STATIONS))
+
+    pat = re.compile(r"^(.+?) MRT STATION \(([A-Z]{2}\d+(?: */ *[A-Z]{2}\d+)*)\)$")
+    base = ("https://www.onemap.gov.sg/api/common/elastic/search?searchVal=MRT+STATION"
+            "&returnGeom=Y&getAddrDetails=Y&pageNum=")
+    skip = set(cfg.get("mrt_lines_excluded", []))
+    found, page = {}, 1
+    print("  fetching the MRT network from OneMap (first build only)")
+    while True:
+        payload = None
+        for attempt in range(6):
+            try:
+                payload = json.load(urllib.request.urlopen(
+                    urllib.request.Request(base + str(page),
+                        headers={"User-Agent": "food-recommendation refresh"}), timeout=20))
+                break
+            except Exception:
+                time.sleep(1.5 * (attempt + 1))     # OneMap rate-limits a burst
+        if payload is None:
+            sys.exit("OneMap would not serve page %d of the station list" % page)
+        for hit in payload.get("results", []):
+            m = pat.match((hit.get("SEARCHVAL") or "").strip())
+            if not m:
+                continue                            # an exit, not the station
+            code = [c.strip() for c in m.group(2).split("/")][0]
+            if code in found or code[:2] in skip:
+                continue
+            found[code] = {"code": code, "line": code[:2], "name": m.group(1).title(),
+                           "lat": round(float(hit["LATITUDE"]), 6),
+                           "lng": round(float(hit["LONGITUDE"]), 6)}
+        if page >= payload.get("totalNumPages", 1):
+            break
+        page += 1
+        time.sleep(0.35)
+
+    if len(found) < 100:
+        sys.exit("only %d stations came back - that is not the network, refusing "
+                 "to write it" % len(found))
+    out = sorted(found.values(), key=lambda s: (s["line"], int(s["code"][2:])))
+    json.dump(out, open(STATIONS, "w"), indent=1, ensure_ascii=False)
+    print("  %d stations cached in data/stations.json" % len(out))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true", help="ignore the geocode cache")
@@ -363,15 +419,29 @@ def main():
     if not places or not homes:
         sys.exit("Nothing geocoded - refusing to write empty data files.")
 
-    # Nearest station per place; keep only stations that win something.
+    # Two different questions, two different lists.
+    #
+    # "Which station is nearest this place?" is answered against the WHOLE
+    # network. It used to be answered against the seven stations drawn on the
+    # map, which is fine while every place is in the neighbourhood and wrong
+    # the moment one is not: a restaurant in Chinatown came back as Farrer
+    # Park, 41 minutes away, because Chinatown was not in the candidate set.
+    stations = load_stations(cfg, warnings)
     for rec in places:
-        near = min(cfg["mrt"], key=lambda s: haversine(rec, s))
+        near = min(stations, key=lambda s: haversine(rec, s))
         rec["mrt"] = near["code"]
         rec["mrtD"] = round(haversine(rec, near))
+
+    # "Which station pills does the map draw?" stays the local list - drawing
+    # 182 of them would bury the neighbourhood the map exists to show.
     winners = {min(cfg["mrt"], key=lambda s: haversine(pt, s))["code"]
                for pt in places + homes}
     mrt = [s for s in cfg["mrt"] if s["code"] in winners]
-    print("  stations in play: %s" % ", ".join(s["code"] for s in mrt))
+    print("  stations drawn: %s" % ", ".join(s["code"] for s in mrt))
+    far = [r for r in places if r["mrt"] not in {s["code"] for s in mrt}]
+    if far:
+        print("  nearest station is off the drawn map for: %s"
+              % ", ".join("%s (%s)" % (r["name"], r["mrt"]) for r in far))
 
     # Label side: west of the pack reads left, east reads right.
     mid = sum(p["lng"] for p in places) / len(places)
@@ -390,11 +460,11 @@ def main():
     bbox = {"lat0": round(min(lats) - pad, 5), "lat1": round(max(lats) + pad, 5),
             "lng0": round(min(lngs) - pad, 5), "lng1": round(max(lngs) + pad, 5)}
     if bbox != cfg["bbox"]:
-        print("  bbox moved -> %s (build.py will fetch fresh tiles)" % bbox)
+        print("  bbox moved -> %s" % bbox)
         cfg["bbox"] = bbox
         json.dump(cfg, open(CONFIG, "w"), indent=2)
 
-    order = ["id", "name", "short", "dish", "lat", "lng", "addr", "price",
+    order = ["id", "name", "short", "cat", "lat", "lng", "addr", "price",
              "plus", "minus", "rating", "mrt", "mrtD", "dir", "matched"]
     shorts = cfg.get("short_names", {})
     for rec in places:

@@ -121,8 +121,12 @@ once the sheet's own code resolves.
 
 `data/config.json` holds everything you would otherwise have to edit code for:
 the sheet id and URL, walking speed, display names for the homes, hand-written
-short labels for places whose names are too long for the map, the MRT candidate
-list, and any home whose postal code the sheet has wrong (`home_overrides`).
+short labels for places whose names are too long for the map, the stations the
+map draws (`mrt`), lines not yet in passenger service (`mrt_lines_excluded`),
+and any home whose postal code the sheet has wrong (`home_overrides`).
+
+`data/stations.json` is fetched from OneMap on the first build and cached.
+Delete it to refetch — after a new line opens, say.
 
 ## How it's built
 
@@ -137,6 +141,15 @@ are the only things fetched at runtime.
   fixed zoom range, no panning past the edge. On GitHub Pages nothing blocks a
   tile server, so the tiles come down as needed, the map pans and zooms freely,
   and the page went from 3.03 MB to 0.22 MB.
+- **Two station lists, on purpose.** `data/mrt.json` is the handful of stations
+  drawn on the map — the neighbourhood. `data/stations.json` is the whole MRT
+  network from OneMap, and it is what answers "nearest MRT" in the table. They
+  used to be one list, which was fine until the sheet grew a restaurant in
+  Chinatown and the page confidently called it a 41-minute walk from Farrer Park.
+- **The map opens on the neighbourhood**, not on every pin. A place beyond the
+  drawn stations still gets its pin and its row; clicking the row flies there.
+- **Category comes from the sheet** and drives the filter chips above the list.
+  Adding a new category to the sheet adds a chip — there is nothing to edit here.
 - **Both themes ship.** The tile layer swaps with the viewer's light/dark setting.
 - **It is a real HTML document** — doctype, `<head>`, and a `width=device-width`
   viewport. It shipped for a while as a bare fragment, because the Artifact host
@@ -174,6 +187,8 @@ because `touch-action` is read when a gesture begins.
 - **Distance rings are not isochrones.** They show separation, not reachability.
 - **Station pills can sit over a place marker** where the two coincide. Click the
   marker underneath, or zoom in and they separate.
+- **An interchange is named by one of its codes**, whichever OneMap indexed
+  nearer. Chinatown may read NE4 or DT19; both are the same station.
 - Entries with no plus/minus written up yet say so.
 - **A browser pull is not a build.** It changes what you are looking at, not what
   is published. Use the GitHub action or `./update.sh` to make it stick.

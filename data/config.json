@@ -19,9 +19,9 @@
   "walk_speed_m_per_min": 80,
   "_bbox": "Recomputed by refresh.py to cover every place, home and station. Changing it makes build.py fetch a fresh set of tiles.",
   "bbox": {
-    "lat0": 1.30618,
+    "lat0": 1.27957,
     "lat1": 1.32402,
-    "lng0": 103.85228,
+    "lng0": 103.84257,
     "lng1": 103.87282
   },
   "bbox_pad_deg": 0.0012,
@@ -88,5 +88,12 @@
     "Cheng Mun Chee Kee Pig Organ Soup": "Cheng Mun Chee Kee",
     "Beach Road Scissor-Cut Curry Rice": "Beach Rd Scissor-Cut",
     "88 Hong Kong Roast Meat Specialist": "88 Hong Kong Roast Meat"
-  }
+  },
+  "_mrt_network": "data/stations.json is the whole MRT network, fetched from OneMap and used only to name the nearest station in the table. The 'mrt' list above is a separate thing: the handful of stations drawn on the map. Delete data/stations.json to refetch.",
+  "mrt_lines_excluded": [
+    "CR",
+    "JE",
+    "JS"
+  ],
+  "_mrt_lines_excluded": "Cross Island and Jurong Region line stations are in OneMap's index but not in passenger service, so naming one as your nearest station would be a station you cannot catch a train at. Remove a code here once its line opens."
 }

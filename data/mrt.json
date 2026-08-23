@@ -33,5 +33,12 @@
   "name": "Lavender",
   "lat": 1.307378,
   "lng": 103.862768
+ },
+ {
+  "code": "EW12",
+  "line": "EW",
+  "name": "Bugis",
+  "lat": 1.300402,
+  "lng": 103.856199
  }
 ]
