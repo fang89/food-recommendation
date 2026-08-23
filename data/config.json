@@ -13,18 +13,12 @@
   "walk_speed_m_per_min": 80,
   "_bbox": "Recomputed by refresh.py to cover every place, home and station. Changing it makes build.py fetch a fresh set of tiles.",
   "bbox": {
-    "lat0": 1.27574,
+    "lat0": 1.27096,
     "lat1": 1.35308,
     "lng0": 103.83397,
     "lng1": 103.89658
   },
   "bbox_pad_deg": 0.0012,
-  "zooms": [
-    15,
-    16,
-    17
-  ],
-  "tile_quality": 74,
   "_mrt": "Candidate stations. refresh.py keeps only those that come out nearest to something, so adding one here is harmless.",
   "mrt": [
     {

@@ -89,7 +89,9 @@ survive the sheet being edited by hand, because this one already has been:
   candidates in `config.json` costs nothing
 
 Geocodes are cached in `build/geocache.json` (committed), so a refresh only calls
-OneMap for genuinely new addresses. `--force` re-resolves everything.
+OneMap for genuinely new addresses. `--force` re-resolves everything. Both caches
+are pruned to what the sheet still lists: a deleted place stops shipping its
+travel times to every viewer, and stops leaving its address in a public file.
 
 **Home lookups are never cached.** The cache file is committed to a public repo,
 and it is keyed by the query, so caching a home would publish its postal code —
@@ -122,6 +124,12 @@ drifted.
 A home is located from the postal code on the sheet's other tab, and only its
 coordinates are written into `data/homes.json` — the postal code itself never
 reaches this repo or the page.
+
+That tab is found by a heading saying **postal code**, not by being the tab that
+is not the food list, so tab order is no longer load-bearing. Within it, the codes
+are read from whichever column holds six-digit numbers — not from any cell that
+happens to look like one, because a price or a year elsewhere on the tab was
+otherwise enough to be geocoded and drawn as somebody's front door.
 
 If OneMap cannot resolve one, `refresh.py` says so by label and leaves that home
 off the map rather than guessing. To place it anyway, add coordinates under

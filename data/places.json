@@ -99,7 +99,7 @@
   "lng": 103.860048392522,
   "addr": "24 Foch Rd, Singapore 209263",
   "price": "$",
-  "plus": "Cheap, taste home cooked. Try the Pig organ soup + Vinegar pig trotter",
+  "plus": "Cheap, taste home cooked. Try the Pig organ soup, Vinegar pig trotter",
   "minus": "",
   "rating": 4.0,
   "mrt": "DT23",
@@ -180,6 +180,24 @@
   "matched": "2 MARINA BOULEVARD THE SAIL @ MARINA BAY SINGAPORE 018987"
  },
  {
+  "id": "outram-park-ya-hua-rou-gu-ch",
+  "name": "Outram Park Ya Hua Rou Gu Cha",
+  "short": "Outram Park Ya Hua Rou…",
+  "cat": "Singapore food",
+  "by": "Fang",
+  "lat": 1.27215611443907,
+  "lng": 103.842114681525,
+  "addr": "7 Keppel Rd, #01-05/07 PSA, Singapore 089053",
+  "price": "$$",
+  "plus": "Best BKT",
+  "minus": "",
+  "rating": 4.0,
+  "mrt": "CC32",
+  "mrtD": 565,
+  "dir": "left",
+  "matched": "7 KEPPEL ROAD TANJONG PAGAR COMPLEX SINGAPORE 089053"
+ },
+ {
   "id": "pink-blossoms-brewing",
   "name": "Pink Blossoms Brewing",
   "short": "Pink Blossoms Brewing",
@@ -216,7 +234,7 @@
   "matched": "380 JALAN BESAR ARC 380 SINGAPORE 209000"
  },
  {
-  "id": "sheng-ji-soya-sauce-chicken-",
+  "id": "sheng-ji-soya-sauce-chicken",
   "name": "Sheng Ji Soya Sauce Chicken Rice/Noodle 生記油雞飯 • 油雞麵",
   "short": "Sheng Ji Soya Sauce…",
   "cat": "Singapore food",

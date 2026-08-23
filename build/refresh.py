@@ -19,6 +19,7 @@ What it copes with, because the sheet has done all of it already:
 import argparse
 import csv
 import datetime
+import hashlib
 import html as html_mod, io, json, math, os, re, sys, time
 import urllib.error, urllib.parse, urllib.request, zipfile
 
@@ -27,6 +28,17 @@ DATA     = os.path.join(ROOT, "data")
 CONFIG   = os.path.join(DATA, "config.json")
 GEOCACHE = os.path.join(ROOT, "build", "geocache.json")
 ONEMAP   = "https://www.onemap.gov.sg/api/common/elastic/search"
+
+
+def write_json(path, obj, **kw):
+    """json.dump, plus the trailing newline it does not write.
+
+    Without it every one of these files ends mid-line, so each refresh shows a
+    churned last line in the diff whether or not anything in it changed.
+    """
+    with open(path, "w") as fh:
+        json.dump(obj, fh, **kw)
+        fh.write("\n")
 
 # Header text -> field name.  Matching is case-insensitive on the prefix, so
 # "Rating (5 pt system)" and a later "Rating /5" both land on `rating`.
@@ -140,18 +152,55 @@ def parse_places(rows, warnings):
     return out
 
 
+def homes_tab(tabs, food, warnings):
+    """Which tab holds the postal codes - asked, not assumed.
+
+    This used to be "whichever tab is not the food list", so tab order was
+    load-bearing and invisible: drag a tab left in Google Sheets, or add a
+    third, and homes come from the wrong rows. The tab says which it is.
+    """
+    others = [t for t in tabs if t is not food]
+    named = [t for t in others
+             if any(re.search(r"postal\s*code", v, re.I)
+                    for cells in t for v in cells.values())]
+    if named:
+        return named[0]
+    if others:
+        warnings.append('No tab has a heading saying "postal code", so the homes '
+                        "were read from whichever tab is not the food list. Add "
+                        "that heading to say which tab it is.")
+        return others[0]
+    return []
+
+
+def postal_column(rows):
+    """The column that holds six-digit numbers, not any cell that looks like one.
+
+    A price, a year or a phone number anywhere on the tab was otherwise enough
+    to be geocoded and drawn as somebody's front door.
+    """
+    tally = {}
+    for cells in rows:
+        for letter, value in cells.items():
+            if re.fullmatch(r"\d{6}(\.0)?", value):
+                tally[letter] = tally.get(letter, 0) + 1
+    return max(tally, key=lambda c: (tally[c], c)) if tally else None
+
+
 def parse_homes(rows, labels, warnings):
+    col = postal_column(rows)
+    if col is None:
+        return []
     out = []
     for cells in rows:
-        letters = sorted(cells, key=lambda c: (len(c), c))
-        postal = label = None
-        for letter in letters:
-            if re.fullmatch(r"\d{6}(\.0)?", cells[letter]):
-                postal = cells[letter].split(".")[0]
-            elif re.search(r"[A-Za-z]", cells[letter]):
-                label = cells[letter].strip()
-        if not postal:
+        raw = cells.get(col, "")
+        if not re.fullmatch(r"\d{6}(\.0)?", raw):
             continue
+        postal = raw.split(".")[0]
+        label = None
+        for letter in sorted(cells, key=lambda c: (len(c), c)):
+            if letter != col and re.search(r"[A-Za-z]", cells[letter]):
+                label = cells[letter].strip()
         if not label:
             label = labels[len(out)] if len(out) < len(labels) else "Home %d" % (len(out) + 1)
             warnings.append('Home row with postal code ending %s has no label - '
@@ -228,6 +277,28 @@ def shorten(name, limit=24):
         return stem
     cut = stem[:limit].rsplit(" ", 1)[0].rstrip(",;-")
     return (cut or stem[:limit]) + "\u2026"
+
+
+def assign_ids(places, warnings):
+    """Give every place an id no other place has.
+
+    An id keys a marker and a table row, so a collision drops one place off the
+    map with nothing said. Nine of these names already reach the 28-character
+    cut, and the sheet carries two stalls in one food centre, so two outlets of
+    one long-named chain is all it takes.
+    """
+    taken = set()
+    for rec in places:
+        slug = re.sub(r"[^a-z0-9]+", "-", rec["name"].lower()).strip("-")
+        ident = slug[:28].rstrip("-") or "place"
+        if ident in taken:
+            tag = hashlib.sha1(rec["name"].encode("utf-8")).hexdigest()[:4]
+            ident = ident[:23].rstrip("-") + "-" + tag
+            warnings.append("%s: its name shortens to an id another place already "
+                            "has, so it is now %r." % (rec["name"], ident))
+        taken.add(ident)
+        rec["id"] = ident
+    return places
 
 
 def haversine(a, b):
@@ -466,7 +537,7 @@ def travel_times(cfg, homes, places, warnings):
                                    (("walk", walk), ("pt", transit)) if v}
         got += 1
         time.sleep(0.25)                      # OneMap rate-limits a burst
-    json.dump(cache, open(ROUTES, "w"), indent=1, sort_keys=True, ensure_ascii=False)
+    write_json(ROUTES, cache, indent=1, sort_keys=True, ensure_ascii=False)
     print("  %d pairs routed, %d cached in total" % (got, len(cache)))
     return cache
 
@@ -524,7 +595,7 @@ def load_stations(cfg, warnings):
         sys.exit("only %d stations came back - that is not the network, refusing "
                  "to write it" % len(found))
     out = sorted(found.values(), key=lambda s: (s["line"], int(s["code"][2:])))
-    json.dump(out, open(STATIONS, "w"), indent=1, ensure_ascii=False)
+    write_json(STATIONS, out, indent=1, ensure_ascii=False)
     print("  %d stations cached in data/stations.json" % len(out))
     return out
 
@@ -547,8 +618,7 @@ def main():
     if not places_tabs:
         sys.exit('No tab contains a "Name of place" header.')
     places_rows = places_tabs[0]
-    others      = [t for t in tabs if t is not places_rows]
-    homes_rows  = others[0] if others else []
+    homes_rows  = homes_tab(tabs, places_rows, warnings)
 
     places = parse_places(places_rows, warnings)
     homes  = parse_homes(homes_rows, cfg.get("home_labels", []), warnings)
@@ -581,7 +651,16 @@ def main():
     # before home lookups were made private. Place keys are full addresses.
     for key in [k for k in cache if re.fullmatch(r"\d{6}", k)]:
         del cache[key]
-    json.dump(cache, open(GEOCACHE, "w"), indent=1, sort_keys=True)
+    # An address the sheet has dropped is not coming back on its own, and this
+    # file is committed to a public repo: the smaller it is, the less there is
+    # to leak. Re-geocoding a place that returns costs two calls.
+    stale = [k for k in cache if k not in {r["addr"] for r in places}]
+    for key in stale:
+        del cache[key]
+    if stale:
+        print("  dropped %d cached geocode%s for addresses no longer on the sheet"
+              % (len(stale), "" if len(stale) == 1 else "s"))
+    write_json(GEOCACHE, cache, indent=1, sort_keys=True)
 
     csv_crosscheck(cfg, places, warnings)
 
@@ -633,14 +712,14 @@ def main():
     if bbox != cfg["bbox"]:
         print("  bbox moved -> %s" % bbox)
         cfg["bbox"] = bbox
-        json.dump(cfg, open(CONFIG, "w"), indent=2)
+        write_json(CONFIG, cfg, indent=2)
 
     # Ids are assigned below, so route lookup happens after them.
     order = ["id", "name", "short", "cat", "by", "lat", "lng", "addr", "price",
              "plus", "minus", "rating", "mrt", "mrtD", "dir", "matched"]
     shorts = cfg.get("short_names", {})
+    assign_ids(places, warnings)
     for rec in places:
-        rec["id"] = re.sub(r"[^a-z0-9]+", "-", rec["name"].lower()).strip("-")[:28]
         rec["short"] = shorts.get(rec["name"]) or shorten(rec["name"])
     places.sort(key=lambda r: (-r["rating"], r["name"]))
 
@@ -648,12 +727,23 @@ def main():
     # the page keys it, so the page can look a pair up without knowing anything
     # about how it was fetched.
     routes = travel_times(cfg, homes, places, warnings)
-    json.dump(routes, open(ROUTES, "w"), indent=1, sort_keys=True, ensure_ascii=False)
+    # routes.json is inlined into index.html whole, so a pair for a place the
+    # sheet no longer lists would keep shipping to every viewer for ever.
+    live = {"%.5f,%.5f>%.5f,%.5f" % (h["lat"], h["lng"], p["lat"], p["lng"])
+            for h in homes for p in places}
+    dead = [k for k in routes if k not in live]
+    for key in dead:
+        del routes[key]
+    if dead:
+        print("  dropped %d route%s for places no longer on the sheet"
+              % (len(dead), "" if len(dead) == 1 else "s"))
+    write_json(ROUTES, routes, indent=1, sort_keys=True, ensure_ascii=False)
 
-    json.dump([{k: p[k] for k in order if k in p} for p in places],
-              open(os.path.join(DATA, "places.json"), "w"), indent=1, ensure_ascii=False)
-    json.dump(homes, open(os.path.join(DATA, "homes.json"), "w"), indent=1, ensure_ascii=False)
-    json.dump(mrt,   open(os.path.join(DATA, "mrt.json"), "w"), indent=1, ensure_ascii=False)
+    write_json(os.path.join(DATA, "places.json"),
+               [{k: p[k] for k in order if k in p} for p in places],
+               indent=1, ensure_ascii=False)
+    write_json(os.path.join(DATA, "homes.json"), homes, indent=1, ensure_ascii=False)
+    write_json(os.path.join(DATA, "mrt.json"), mrt, indent=1, ensure_ascii=False)
 
     print("\nwrote data/places.json, data/homes.json, data/mrt.json, data/routes.json")
     if warnings:
