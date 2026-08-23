@@ -161,7 +161,7 @@ are the only things fetched at runtime.
 
 ## Travel times
 
-The **From <home>** column is how long it takes, not how far it is. OneMap costs
+The lead column, **From <home>**, is how long it takes, not how far it is. OneMap costs
 every home-to-place pair two ways at build time — on foot, and by public
 transport — and the page shows whichever is quicker, saying which it is. A
 number of minutes means nothing if the reader cannot tell whether they are
