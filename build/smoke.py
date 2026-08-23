@@ -100,13 +100,21 @@ Layer.prototype.clearLayers=function(){ return this; };
 Layer.prototype.bringToBack=function(){ return this; };
 Layer.prototype.addLayer=function(){ return this; };
 
-function Bounds(){ }
+function Bounds(pts){ this.pts=pts||[]; }
 Bounds.prototype.pad=function(){ return this; };
 Bounds.prototype.contains=function(){ return true; };
+// The span of what was passed in, in degrees - enough for getBoundsZoom below
+// to fall as the set widens, which is the only property the page relies on.
+Bounds.prototype.span=function(){
+  if(this.pts.length<2) return 0;
+  var la=this.pts.map(function(p){ return p[0]; }), lo=this.pts.map(function(p){ return p[1]; });
+  return Math.max(Math.max.apply(null,la)-Math.min.apply(null,la),
+                  Math.max.apply(null,lo)-Math.min.apply(null,lo));
+};
 
 var __mapc=new El("mapc"), __zoom=16;
 var L={
-  latLngBounds:function(){ note("latLngBounds"); return new Bounds(); },
+  latLngBounds:function(pts){ note("latLngBounds"); return new Bounds(pts); },
   layerGroup:function(){ return new Layer("layerGroup"); },
   circleMarker:function(){ return new Layer("circleMarker"); },
   marker:function(){ return new Layer("marker"); },
@@ -123,6 +131,15 @@ var L={
       getContainer:function(){ return __mapc; },
       getZoom:function(){ return __zoom; },
       fitBounds:function(){ note("fitBounds"); },
+      // The page picks its opening view by asking what zoom a set of points
+      // would fit at, and stops before the labels would be hidden. A stub that
+      // does not answer that question crashes the page it is meant to test, so
+      // answer it the way the real one does: wider bounds, lower zoom.
+      getBoundsZoom:function(b){
+        note("getBoundsZoom");
+        var span=b&&b.span?b.span():0;
+        return span<=0 ? 18 : Math.max(9, Math.min(18, Math.log2(0.012/span)+16));
+      },
       setView:function(){ note("setView"); }, removeLayer:function(){}, addLayer:function(){},
       invalidateSize:function(){},
       attributionControl:{setPrefix:function(){ note("attrPrefix"); }},

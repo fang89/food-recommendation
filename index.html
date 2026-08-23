@@ -1299,7 +1299,11 @@ html{-webkit-text-size-adjust:100%}
   }).join("");
 
   map.on("click",function(){ if(Date.now()-lastMarkerClick<80) return; select(null); });
-  function syncZoomClass(){ map.getContainer().classList.toggle("zoomed-out", map.getZoom()<15.9); }
+  // Below this the place labels are hidden, because they pile into each other.
+  // The opening fit is chosen against the same number, so the page never opens
+  // in the state where every marker is a nameless dot.
+  var LABEL_ZOOM=15.9;
+  function syncZoomClass(){ map.getContainer().classList.toggle("zoomed-out", map.getZoom()<LABEL_ZOOM); }
   map.on("zoomend",syncZoomClass);
 
   // Hidden means off the map, not merely faint: a pin you cannot click but
@@ -1370,7 +1374,7 @@ html{-webkit-text-size-adjust:100%}
     }).sort(function(x,y){ return tripMin(x)-tripMin(y) || x.d-y.d; });
   }
 
-  function noteHTML(p,cls){
+  function noteHTML(p){
     if(!p.plus && !p.minus) return '<span class="c-none">Not written up yet</span>';
     var h="";
     if(p.plus)  h+='<span class="pl"><b class="g">+</b> '+esc(p.plus)+'</span>';
@@ -1486,8 +1490,12 @@ html{-webkit-text-size-adjust:100%}
     });
 
     document.getElementById("thFrom").textContent="From "+H.name;
+    // R, not PLACES: the range below already comes from the filtered set, so
+    // counting the unfiltered one made the caption contradict itself - "24
+    // places · 4,145 m–4,145 m" over a single row.
     document.getElementById("colo").textContent=
-      PLACES.length+" places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
+      R.length+(R.length===PLACES.length?"":" of "+PLACES.length)+
+      " places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
     Array.prototype.forEach.call(document.querySelectorAll(".switch button"),function(b){
       b.setAttribute("aria-pressed", +b.dataset.home===state.home?"true":"false");
     });
@@ -1783,13 +1791,36 @@ html{-webkit-text-size-adjust:100%}
   // the island and left the streets this map is about as a smudge. The
   // neighbourhood is the places served by the stations the map actually draws;
   // anything further out still has its pin, and its row still flies you there.
-  var DRAWN={}; MRT.forEach(function(s){ DRAWN[s.code]=1; });
-  var local=PLACES.filter(function(p){ return DRAWN[p.mrt.code]; });
-  map.fitBounds(L.latLngBounds(
-    (local.length?local:PLACES).map(function(p){return [p.lat,p.lng];})
-      .concat(MRT.map(function(s){return [s.lat,s.lng];}))
-      .concat(HOMES.map(function(h){return [h.lat,h.lng];}))
-  ).pad(.06),{maxZoom:16});
+  // Open on as much of the neighbourhood as can actually be read: the doors,
+  // then the places nearest them, stopping at the last one that still leaves
+  // the view above LABEL_ZOOM. Anything further out keeps its pin and its row,
+  // and clicking that row still flies you there.
+  //
+  // This used to fit to "the places served by the stations the map draws",
+  // which was the neighbourhood right up until the sheet grew a place beside a
+  // seventh station. That one place pulled the opening view a full zoom level
+  // out, past the threshold above, and the page opened as two dozen identical
+  // dots with no name on any of them. Deriving the set from the thing that
+  // actually matters - whether you can read it - cannot drift that way.
+  function fromDoor(p){
+    return HOMES.reduce(function(m,h){ return Math.min(m,dist(h,p)); },Infinity);
+  }
+  var opening=HOMES.map(function(h){ return [h.lat,h.lng]; });
+  PLACES.slice().sort(function(a,b){ return fromDoor(a)-fromDoor(b); })
+    .every(function(p){
+      var trial=opening.concat([[p.lat,p.lng]]);
+      if(map.getBoundsZoom(L.latLngBounds(trial).pad(.06))<LABEL_ZOOM) return false;
+      opening=trial; return true;
+    });
+  if(map.getBoundsZoom(L.latLngBounds(opening).pad(.06))<LABEL_ZOOM){
+    // A phone is too narrow to hold even the three doors and still leave a
+    // name readable. Open on the door being measured from rather than on a
+    // neighbourhood of anonymous dots.
+    var first=HOMES[state.home]||HOMES[0];
+    map.setView([first.lat,first.lng], 16);
+  } else {
+    map.fitBounds(L.latLngBounds(opening).pad(.06),{maxZoom:16});
+  }
   syncZoomClass();
   drawChips();
   draw();

@@ -167,8 +167,17 @@ are the only things fetched at runtime.
   network from OneMap, and it is what answers "nearest MRT" in the table. They
   used to be one list, which was fine until the sheet grew a restaurant in
   Chinatown and the page confidently called it a 41-minute walk from Farrer Park.
-- **The map opens on the neighbourhood**, not on every pin. A place beyond the
-  drawn stations still gets its pin and its row; clicking the row flies there.
+- **The map opens on as much as can be read.** It takes the doors, then the
+  places nearest them, and stops at the last one that still leaves the view above
+  the zoom where labels are hidden — so it never opens as a field of anonymous
+  dots. On a screen too narrow to hold even the three doors that way, it opens on
+  the door you are measuring from. A place beyond that still gets its pin and its
+  row; clicking the row flies there.
+
+  This replaced "the places served by the stations the map draws", which was the
+  neighbourhood right until the sheet grew a place beside a seventh station: that
+  one row pulled the opening view a zoom level out, past the label threshold, and
+  the page opened with twenty-five nameless markers.
 - **Category and Recommended by come from the sheet.** Category drives the filter
   chips above the list; adding a new one to the sheet adds a chip, with nothing
   to edit here. Recommended by is its own sortable column.
