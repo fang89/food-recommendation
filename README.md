@@ -11,12 +11,12 @@ actually serves it.
 - **A real street map** with every place pinned, plus the five MRT stations that come
   out nearest to something on the list — drawn in their real line colours (NE purple,
   DT blue, EW green).
-- **Three datums.** Click any home marker, or the switch above the map, and the
+- **Three datums.** Click any home triangle, or the switch above the map, and the
   distance rings, measured runs, distances, bearings and walking times all recompute
   from that door — and the map recentres on it, since that is what you are now
   measuring from.
-- **A sortable list.** Sort by place, rating, price, distance from the active door, or
-  walk to the nearest MRT. Clicking a row finds that place on the map.
+- **A sortable list.** Sort by proximity rank, place, rating, price, distance from the
+  active door, or walk to the nearest MRT. Clicking a row finds that place on the map.
 - **A card per place** on click — rating, price band, distance, station, the plus and
   the minus, and a Google Maps walking-directions link that routes from wherever the
   viewer happens to be.

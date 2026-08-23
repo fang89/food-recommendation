@@ -762,12 +762,13 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .leaflet-bar{border:1px solid var(--rule); box-shadow:none}
 
 .hm{display:grid; place-items:center; cursor:pointer}
-.hm i{display:block; width:15px; height:15px; border-radius:50%; border:2px solid var(--ink); background:var(--halo); box-shadow:0 0 0 3px var(--halo); transition:border-color .15s}
-.hm i::after{content:""; display:block; width:5px; height:5px; border-radius:50%; background:var(--ink); margin:3px auto}
-.hm.off i{border-color:var(--ink-3); border-style:dashed}
-.hm.off i::after{background:var(--ink-3)}
-.hm:hover i{border-color:var(--accent)}
-.hm:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:50%}
+.hm svg{display:block; width:32px; height:28px; overflow:visible;
+  filter:drop-shadow(0 0 3px var(--halo)) drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.hm polygon{fill:var(--halo); stroke:var(--ink); stroke-width:2.6; stroke-linejoin:round;
+  transition:stroke .15s, fill .15s, stroke-width .15s}
+.hm.off polygon{stroke:var(--ink-3); stroke-width:2; stroke-dasharray:4.5 3.5; fill:none}
+.hm:hover polygon{stroke:var(--accent)}
+.hm:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
 
 .mrt{display:flex; align-items:center; justify-content:center; width:48px; height:24px; border-radius:12px;
   font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.04em; color:#fff;
@@ -832,8 +833,10 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 
 .legend{display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; padding:11px 16px; border-top:1px solid var(--rule-soft); font-family:var(--mono); font-size:10.5px; color:var(--ink-2); letter-spacing:.03em}
 .legend i{display:inline-block; vertical-align:middle; margin-right:7px}
-.k-home{width:11px; height:11px; border-radius:50%; border:2px solid var(--ink); background:var(--sheet)}
-.k-off{width:11px; height:11px; border-radius:50%; border:2px dashed var(--ink-3); background:var(--sheet)}
+.k-home,.k-off{width:0; height:0; border-left:7px solid transparent;
+  border-right:7px solid transparent; margin-bottom:1px}
+.k-home{border-bottom:12px solid var(--ink)}
+.k-off{border-bottom:12px solid var(--ink-3); opacity:.55}
 .k-place{width:11px; height:11px; border-radius:50%; background:var(--accent)}
 .k-ne{width:22px; height:11px; border-radius:6px; background:var(--ne)}
 .k-dt{width:22px; height:11px; border-radius:6px; background:var(--dt)}
@@ -937,12 +940,12 @@ tbody tr:last-child td{border-bottom:none}
       <table id="list">
         <thead>
           <tr>
-            <th class="num" scope="col"><span class="lbl2">Near</span></th>
+            <th class="num" scope="col" data-sort="near" aria-sort="none"><button type="button">Near<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="rating" aria-sort="descending"><button type="button">Rating<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="price" aria-sort="none"><button type="button">Price<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
-            <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From Boon Keng</span><span class="car">&#9650;</span></button></th>
+            <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Address</span></th>
             <th scope="col"><span class="lbl2">Go</span></th>
@@ -972,7 +975,7 @@ tbody tr:last-child td{border-bottom:none}
   try{
   var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var CFG={"bbox":{"lat0":1.30618,"lat1":1.32402,"lng0":103.85228,"lng1":103.87282},"walk":80,"sheet_id":"1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q","sheet_gid":"1534632431","short_names":{"Cheng Mun Chee Kee Pig Organ Soup":"Cheng Mun Chee Kee","Beach Road Scissor-Cut Curry Rice":"Beach Rd Scissor-Cut","88 Hong Kong Roast Meat Specialist":"88 Hong Kong Roast Meat"}};
-  var HOMES=[{"name":"Boon Keng","lat":1.31642489627751,"lng":103.861501638313,"dir":"left"},{"name":"Bay hse","lat":1.32282118210161,"lng":103.869177870562,"dir":"right"},{"name":"Ben hse","lat":1.32112027780383,"lng":103.866786871368,"dir":"right"}];
+  var HOMES=[{"name":"Fang hse","lat":1.31642489627751,"lng":103.861501638313,"dir":"left"},{"name":"Bay hse","lat":1.32282118210161,"lng":103.869177870562,"dir":"right"},{"name":"Ben hse","lat":1.32112027780383,"lng":103.866786871368,"dir":"right"}];
   var MRT=[{"code":"NE9","line":"NE","name":"Boon Keng","lat":1.319336,"lng":103.861569},{"code":"DT23","line":"DT","name":"Bendemeer","lat":1.313673,"lng":103.862978},{"code":"DT24","line":"DT","name":"Geylang Bahru","lat":1.321301,"lng":103.871623},{"code":"NE8","line":"NE","name":"Farrer Park","lat":1.311906,"lng":103.853478},{"code":"EW11","line":"EW","name":"Lavender","lat":1.307378,"lng":103.862768}];
   var PLACES=[{"id":"ah-ong-hokkien-mee","name":"Ah Ong Hokkien Mee","short":"Ah Ong Hokkien Mee","dish":"Hokkien Mee","lat":1.32195385488883,"lng":103.869843391813,"addr":"68 Geylang Bahru, #01-3201, Singapore 330068","price":"$","plus":"Generous serving of seafood, strong wok hei flavor","minus":"","rating":4.5,"mrt":"DT24","mrtD":211,"dir":"right","matched":"68 GEYLANG BAHRU GEYLANG BAHRU VILLE SINGAPORE 330068"},{"id":"cheng-mun-chee-kee-pig-organ","name":"Cheng Mun Chee Kee Pig Organ Soup","short":"Cheng Mun Chee Kee","dish":"Pig organ soup","lat":1.31220246285237,"lng":103.860048392522,"addr":"24 Foch Rd, Singapore 209263","price":"$","plus":"Cheap and taste home cooked","minus":"Slightly warm place","rating":4.0,"mrt":"DT23","mrtD":364,"dir":"left","matched":"24 FOCH ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 209263"},{"id":"prince-noodles-arc-380","name":"Prince Noodles @ ARC 380","short":"Prince Noodles","dish":"Ban mian","lat":1.3132174360132,"lng":103.860335049351,"addr":"380 Jln Besar, #01-10 ARC 380, Singapore 209000","price":"$","plus":"Best banmian","minus":"Slightly salty","rating":4.0,"mrt":"DT23","mrtD":298,"dir":"left","matched":"380 JALAN BESAR ARC 380 SINGAPORE 209000"},{"id":"sheng-ji-soya-sauce-chicken-","name":"Sheng Ji Soya Sauce Chicken Rice/Noodle \u751f\u8a18\u6cb9\u96de\u98ef \u2022 \u6cb9\u96de\u9eb5","short":"Sheng Ji Soya Sauce\u2026","dish":"Soya Sauce Chicken Rice","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-13, Singapore 330069","price":"$","plus":"Tasty, generous portion","minus":"","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"hui-wei-chilli-ban-mian","name":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli Ban Mian","short":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli\u2026","dish":"Chilli Panmee","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-58, Singapore 330069","price":"$","plus":"Strong Flavors, Spicy","minus":"Prepare to queue for 20 min during peak hours","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"beach-road-scissor-cut-curry","name":"Beach Road Scissor-Cut Curry Rice","short":"Beach Rd Scissor-Cut","dish":"Curry rice","lat":1.30952329692761,"lng":103.85774176901,"addr":"229 Jln Besar, Singapore 208905","price":"$","plus":"Good curry rice. Can ask for extra sauce","minus":"Slightly heavy","rating":3.5,"mrt":"NE8","mrtD":543,"dir":"left","matched":"229 JALAN BESAR SINGAPORE 208905"},{"id":"char","name":"Char","short":"Char","dish":"Char siew","lat":1.31611634872281,"lng":103.858246886848,"addr":"454 Race Course Rd, Singapore 218697","price":"$$","plus":"Nice. Good wasabi sauce","minus":"Oily charsiew, slightly expensive","rating":3.5,"mrt":"NE9","mrtD":514,"dir":"left","matched":"454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"},{"id":"cheok-kee","name":"Cheok Kee","short":"Cheok Kee","dish":"Duck Rice","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-35 Market & Food Centre, Singapore 330069","price":"$","plus":"Meat is nice, chillli is ok","minus":"A bit too wet, too much starchy sauce","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"im-em-thai-kitchen","name":"Im-Em Thai Kitchen","short":"Im-Em Thai Kitchen","dish":"Pad Thai","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Ave, #01-40, Singapore 339511","price":"$$","plus":"Good pad thai","minus":"Inconsistent at times","rating":3.5,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"ju-xing-hainanese-boneless-c","name":"Ju Xing Hainanese Boneless Chicken Rice \u805a\u5174\u6d77\u5357\u8d77\u9aa8\u9e21\u996d Geylang Bahru","short":"Ju Xing Hainanese\u2026","dish":"72","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-01 Market & Food Centre, Singapore 330069","price":"$","plus":"","minus":"Prepare to queue for 10-20 min","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"kitchenman-nasi-lemak","name":"Kitchenman Nasi Lemak","short":"Kitchenman Nasi Lemak","dish":"Nasi lemak","lat":1.31221743176262,"lng":103.862824192961,"addr":"2 Kallang Ave, #01-08/13 CT HUB, Singapore 339407","price":"$","plus":"Village park style nasi lemak","minus":"1 hr wait","rating":3.5,"mrt":"DT23","mrtD":163,"dir":"left","matched":"2 KALLANG AVENUE CT HUB SINGAPORE 339407"},{"id":"new-udon-mookata","name":"New Udon Mookata","short":"New Udon Mookata","dish":"Mookata","lat":1.31190106395845,"lng":103.861539586844,"addr":"119 Lavender St., Singapore 338731","price":"$$","plus":"Good pork belly","minus":"Stomachache the day after","rating":3.5,"mrt":"DT23","mrtD":254,"dir":"left","matched":"119 LAVENDER STREET SINGAPORE 338731"},{"id":"thumbs-up-restaurant","name":"Thumbs up restaurant \u5927\u62c7\u6307\u7f8e\u98df","short":"Thumbs up restaurant\u2026","dish":"Mala Xiangguo, \u849c\u82d4\u7092\u8089, \u70e4\u4e32, \u70b8\u9171\u9762","lat":1.3209929422065,"lng":103.870389998344,"addr":"Opposite Geylang Bahru MRT, Singapore 330071","price":"$$","plus":"affordable price, the food mostly solid","minus":"their rice tastes like shit. do not order white rice or fried rice from them. can order bun","rating":3.5,"mrt":"DT24","mrtD":141,"dir":"right","matched":"71 KALLANG BAHRU SINGAPORE 330071"},{"id":"88-hong-kong-roast-meat-spec","name":"88 Hong Kong Roast Meat Specialist","short":"88 Hong Kong Roast Meat","dish":"Char siew, Sio ba","lat":1.3151925413522,"lng":103.859760427379,"addr":"308 Lavender St., Singapore 338814","price":"$","plus":"Nice","minus":"Oily","rating":3.0,"mrt":"DT23","mrtD":396,"dir":"left","matched":"308 LAVENDER STREET SINGAPORE 338814"},{"id":"moonchild","name":"Moonchild","short":"Moonchild","dish":"Cold brew coffee","lat":1.31238652619302,"lng":103.859366874523,"addr":"351 Jln Besar, #01-01, Singapore 208988","price":"$$","plus":"Good coffee, good mains","minus":"Slightly expensive","rating":3.0,"mrt":"DT23","mrtD":426,"dir":"left","matched":"351 JALAN BESAR RELIANCE BUILDING SINGAPORE 208988"},{"id":"sweet-cheeks","name":"Sweet Cheeks","short":"Sweet Cheeks","dish":"Ice cream","lat":1.31171131328582,"lng":103.860112458366,"addr":"147 Tyrwhitt Rd, Singapore 207561","price":"$$","plus":"Good waffle, pistachio ice cream","minus":"","rating":2.5,"mrt":"DT23","mrtD":386,"dir":"left","matched":"147 TYRWHITT ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 207561"}];
 
@@ -1045,6 +1048,7 @@ tbody tr:last-child td{border-bottom:none}
   var state={home:0, sel:null, sortKey:"rating", sortDir:-1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
+    near:function(a,b){ return a.rank-b.rank; },
     dist:function(a,b){ return a.d-b.d; },
     mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
     rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
@@ -1096,10 +1100,12 @@ tbody tr:last-child td{border-bottom:none}
 
   HOMES.forEach(function(h,k){
     var m=L.marker([h.lat,h.lng],{
-      icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'"><i></i></span>', iconSize:[21,21], iconAnchor:[10.5,10.5]}),
+      icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'">'+
+        '<svg viewBox="0 0 32 28" aria-hidden="true" focusable="false"><polygon points="16,3 29,25 3,25"/></svg></span>',
+      iconSize:[32,28], iconAnchor:[16,17]}),
       keyboard:false, zIndexOffset:1000
     }).addTo(map);
-    m.bindTooltip("",{permanent:true, direction:h.dir, offset:[h.dir==="right"?13:-13,0], className:"lbl home", opacity:1});
+    m.bindTooltip("",{permanent:true, direction:h.dir, offset:[h.dir==="right"?18:-18,0], className:"lbl home", opacity:1});
     m.on("click",function(){ lastMarkerClick=Date.now(); setHome(k); });
     homeMarkers[k]=m;
   });

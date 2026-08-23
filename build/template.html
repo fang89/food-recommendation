@@ -101,12 +101,13 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .leaflet-bar{border:1px solid var(--rule); box-shadow:none}
 
 .hm{display:grid; place-items:center; cursor:pointer}
-.hm i{display:block; width:15px; height:15px; border-radius:50%; border:2px solid var(--ink); background:var(--halo); box-shadow:0 0 0 3px var(--halo); transition:border-color .15s}
-.hm i::after{content:""; display:block; width:5px; height:5px; border-radius:50%; background:var(--ink); margin:3px auto}
-.hm.off i{border-color:var(--ink-3); border-style:dashed}
-.hm.off i::after{background:var(--ink-3)}
-.hm:hover i{border-color:var(--accent)}
-.hm:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:50%}
+.hm svg{display:block; width:32px; height:28px; overflow:visible;
+  filter:drop-shadow(0 0 3px var(--halo)) drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.hm polygon{fill:var(--halo); stroke:var(--ink); stroke-width:2.6; stroke-linejoin:round;
+  transition:stroke .15s, fill .15s, stroke-width .15s}
+.hm.off polygon{stroke:var(--ink-3); stroke-width:2; stroke-dasharray:4.5 3.5; fill:none}
+.hm:hover polygon{stroke:var(--accent)}
+.hm:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
 
 .mrt{display:flex; align-items:center; justify-content:center; width:48px; height:24px; border-radius:12px;
   font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.04em; color:#fff;
@@ -171,8 +172,10 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 
 .legend{display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; padding:11px 16px; border-top:1px solid var(--rule-soft); font-family:var(--mono); font-size:10.5px; color:var(--ink-2); letter-spacing:.03em}
 .legend i{display:inline-block; vertical-align:middle; margin-right:7px}
-.k-home{width:11px; height:11px; border-radius:50%; border:2px solid var(--ink); background:var(--sheet)}
-.k-off{width:11px; height:11px; border-radius:50%; border:2px dashed var(--ink-3); background:var(--sheet)}
+.k-home,.k-off{width:0; height:0; border-left:7px solid transparent;
+  border-right:7px solid transparent; margin-bottom:1px}
+.k-home{border-bottom:12px solid var(--ink)}
+.k-off{border-bottom:12px solid var(--ink-3); opacity:.55}
 .k-place{width:11px; height:11px; border-radius:50%; background:var(--accent)}
 .k-ne{width:22px; height:11px; border-radius:6px; background:var(--ne)}
 .k-dt{width:22px; height:11px; border-radius:6px; background:var(--dt)}
@@ -276,12 +279,12 @@ tbody tr:last-child td{border-bottom:none}
       <table id="list">
         <thead>
           <tr>
-            <th class="num" scope="col"><span class="lbl2">Near</span></th>
+            <th class="num" scope="col" data-sort="near" aria-sort="none"><button type="button">Near<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="rating" aria-sort="descending"><button type="button">Rating<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="price" aria-sort="none"><button type="button">Price<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
-            <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From Boon Keng</span><span class="car">&#9650;</span></button></th>
+            <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Address</span></th>
             <th scope="col"><span class="lbl2">Go</span></th>
@@ -379,6 +382,7 @@ tbody tr:last-child td{border-bottom:none}
   var state={home:0, sel:null, sortKey:"rating", sortDir:-1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
+    near:function(a,b){ return a.rank-b.rank; },
     dist:function(a,b){ return a.d-b.d; },
     mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
     rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
@@ -430,10 +434,12 @@ tbody tr:last-child td{border-bottom:none}
 
   HOMES.forEach(function(h,k){
     var m=L.marker([h.lat,h.lng],{
-      icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'"><i></i></span>', iconSize:[21,21], iconAnchor:[10.5,10.5]}),
+      icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'">'+
+        '<svg viewBox="0 0 32 28" aria-hidden="true" focusable="false"><polygon points="16,3 29,25 3,25"/></svg></span>',
+      iconSize:[32,28], iconAnchor:[16,17]}),
       keyboard:false, zIndexOffset:1000
     }).addTo(map);
-    m.bindTooltip("",{permanent:true, direction:h.dir, offset:[h.dir==="right"?13:-13,0], className:"lbl home", opacity:1});
+    m.bindTooltip("",{permanent:true, direction:h.dir, offset:[h.dir==="right"?18:-18,0], className:"lbl home", opacity:1});
     m.on("click",function(){ lastMarkerClick=Date.now(); setHome(k); });
     homeMarkers[k]=m;
   });
