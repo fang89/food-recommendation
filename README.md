@@ -127,14 +127,17 @@ list, and the tile zoom range and quality.
 
 ## How it's built
 
-One self-contained `index.html`. Nothing is fetched at runtime except Google Fonts.
+One `index.html` with Leaflet and the data inlined. The basemap and the fonts
+are the only things fetched at runtime.
 
 - **Leaflet** is vendored into `vendor/`.
-- **The basemap is embedded.** A published page can't reach a tile server, so the
-  CARTO tiles (zoom 15-17, @2x, both light and dark) are downloaded at build time,
-  transcoded PNG to WebP, and inlined as base64 data URIs. Zoom 18 is upscaled from
-  the z17 @2x tiles. That fixes coverage: the map is bounded to these estates and
-  won't pan past the edge.
+- **The basemap is live**, from CARTO's CDN, light and dark. It used to be baked
+  into the page as ~200 WebP data URIs, because the first home for this page was
+  a Claude Artifact, where a strict CSP blocks any request to another host. That
+  cost 2.8 MB and, worse, fenced the map into the one box those tiles covered:
+  fixed zoom range, no panning past the edge. On GitHub Pages nothing blocks a
+  tile server, so the tiles come down as needed, the map pans and zooms freely,
+  and the page went from 3.03 MB to 0.22 MB.
 - **Both themes ship.** The tile layer swaps with the viewer's light/dark setting.
 - **Place data is never hand-edited.** It comes from `data/*.json`, which comes from
   the sheet.
@@ -144,6 +147,8 @@ One self-contained `index.html`. Nothing is fetched at runtime except Google Fon
 - **Distances are geodesic** — straight lines from the datum, not walking routes.
   Allow roughly 15–30% more on foot once crossings and the canal are counted.
 - **Distance rings are not isochrones.** They show separation, not reachability.
+- **Station pills can sit over a place marker** where the two coincide. Click the
+  marker underneath, or zoom in and they separate.
 - Entries with no plus/minus written up yet say so.
 - **A browser pull is not a build.** It changes what you are looking at, not what
   is published. Use the GitHub action or `./update.sh` to make it stick.

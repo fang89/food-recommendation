@@ -109,6 +109,7 @@ var L={
     };
   }
 };
+L.tileLayer=function(){ note("tileLayer"); return new Layer("tileLayer"); };
 L.TileLayer=function(){};
 L.TileLayer.prototype.initialize=function(){};
 L.TileLayer.prototype.addTo=function(){ return this; };
@@ -176,6 +177,16 @@ if(!__calls["fitBounds"]) throw new Error("fitBounds never ran - the page would 
 if(!__calls["html:rows"]) throw new Error("the table body was never written - the list would be empty");
 if(!__calls["html:switch"]) throw new Error("the datum switch was never written");
 if(!__calls["circleMarker"]) throw new Error("no place markers were created");
+if(!__calls["tileLayer"]) throw new Error("no basemap layer was added");
+
+// Selecting a place must recentre on it, the same as switching datum does.
+if(PLACES.length){
+  var pv=__calls["setView"]||0;
+  select(PLACES[0].id);
+  if((__calls["setView"]||0)<=pv)
+    throw new Error("selecting a place did not recentre the map on it");
+  select(null);
+}
 
 // Every home the build kept must be plottable, and switching to one must both
 // change the datum and recentre the map on it.

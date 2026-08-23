@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build index.html: fetch basemap tiles, inline everything, emit one file.
+"""Build index.html: inline Leaflet and the data into one file.
 
 The published page can't reach a tile server (strict CSP on the host), so the
 CARTO basemap is downloaded once, transcoded PNG -> WebP, and embedded as
@@ -28,51 +28,9 @@ def load(name):
     return json.load(open(os.path.join(DATA, name)))
 
 
-def cache_path(bbox, zooms):
-    """Tiles are cached per bounding box, so moving the bbox refetches by itself."""
-    key = hashlib.sha1(json.dumps([bbox, zooms], sort_keys=True).encode()).hexdigest()[:10]
-    return os.path.join(ROOT, "build", "tiles-%s.pkl" % key)
-
-
-def tile_x(lng, z):
-    return int((lng + 180.0) / 360.0 * (2 ** z))
-
-
-def tile_y(lat, z):
-    r = math.radians(lat)
-    return int((1.0 - math.log(math.tan(r) + 1 / math.cos(r)) / math.pi) / 2.0 * (2 ** z))
-
-
-def fetch_tiles(bbox, zooms, quality):
-    cache = cache_path(bbox, zooms)
-    if os.path.exists(cache):
-        print("using cached tiles:", os.path.basename(cache))
-        return pickle.load(open(cache, "rb"))
-    tiles, subs, i = {}, "abcd", 0
-    for theme, slug in THEMES:
-        for z in zooms:
-            for x in range(tile_x(bbox["lng0"], z), tile_x(bbox["lng1"], z) + 1):
-                for y in range(tile_y(bbox["lat1"], z), tile_y(bbox["lat0"], z) + 1):
-                    url = ("https://%s.basemaps.cartocdn.com/%s/%d/%d/%d@2x.png"
-                           % (subs[i % 4], slug, z, x, y))
-                    i += 1
-                    data = urllib.request.urlopen(
-                        urllib.request.Request(url, headers=UA), timeout=30).read()
-                    buf = io.BytesIO()
-                    Image.open(io.BytesIO(data)).convert("RGB").save(
-                        buf, "WEBP", quality=quality, method=6)
-                    tiles["%s/%d/%d/%d" % (theme, z, x, y)] = buf.getvalue()
-                    time.sleep(0.035)
-    pickle.dump(tiles, open(cache, "wb"))
-    print("fetched %d tiles" % len(tiles))
-    return tiles
-
-
 def main():
     cfg = load("config.json")
-    zooms = tuple(cfg.get("zooms", [15, 16, 17]))
-    tiles = fetch_tiles(cfg["bbox"], zooms, cfg.get("tile_quality", 74))
-    encoded = {k: base64.b64encode(v).decode("ascii") for k, v in tiles.items()}
+
     css = open(os.path.join(ROOT, "vendor", "leaflet.css")).read()
     css = css.replace("url(images/", "url(data:,#")   # default marker icons are unused
     js = open(os.path.join(ROOT, "vendor", "leaflet.js")).read()
@@ -86,7 +44,6 @@ def main():
     subs = {
         "/*__LEAFLET_CSS__*/": css,
         "/*__LEAFLET_JS__*/":  js,
-        "/*__TILES__*/":       json.dumps(encoded, separators=(",", ":")),
         "/*__CONFIG__*/":      json.dumps(runtime, separators=(",", ":")),
         "/*__HOMES__*/":       json.dumps(load("homes.json"),  separators=(",", ":")),
         "/*__MRT__*/":         json.dumps(load("mrt.json"),    separators=(",", ":")),
@@ -99,8 +56,8 @@ def main():
         html = html.replace(token, value)
 
     open(OUT, "w").write(html)
-    print("wrote %s  (%.2f MB, %d places, %d tiles)"
-          % (OUT, os.path.getsize(OUT) / 1e6, len(load("places.json")), len(encoded)))
+    print("wrote %s  (%.2f MB, %d places)"
+          % (OUT, os.path.getsize(OUT) / 1e6, len(load("places.json"))))
 
 
 if __name__ == "__main__":

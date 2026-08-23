@@ -205,7 +205,6 @@ tbody tr:last-child td{border-bottom:none}
 .c-rank{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--accent); letter-spacing:.08em; width:1%; padding-top:16px}
 .c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
 .c-dish{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
-.c-addr{font-family:var(--mono); font-size:11px; color:var(--ink-2); line-height:1.5; white-space:nowrap}
 .c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
 .c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
 .pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
@@ -286,7 +285,6 @@ tbody tr:last-child td{border-bottom:none}
             <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
             <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
-            <th scope="col"><span class="lbl2">Address</span></th>
             <th scope="col"><span class="lbl2">Go</span></th>
           </tr>
         </thead>
@@ -296,24 +294,21 @@ tbody tr:last-child td{border-bottom:none}
   </section>
 
   <footer class="colophon">
-    <span id="colo">10 places</span> · source: Google Sheet, refreshed 23 Aug 2026 · geocoded with <b>OneMap SG</b> · straight-line distances, allow 15–30% more on foot · basemap <b>CARTO</b> on <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, tiles embedded
+    <span id="colo">10 places</span> · source: Google Sheet, refreshed 23 Aug 2026 · geocoded with <b>OneMap SG</b> · straight-line distances, allow 15–30% more on foot · basemap <b>CARTO</b> on <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>
   </footer>
 
 </div>
 
 <script>/*__LEAFLET_JS__*/</script>
-<script>var TILES=/*__TILES__*/;</script>
 <script>
 (function(){
   "use strict";
   try{
-  var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var CFG=/*__CONFIG__*/;
   var HOMES=/*__HOMES__*/;
   var MRT=/*__MRT__*/;
   var PLACES=/*__PLACES__*/;
 
-  var BOUNDS=L.latLngBounds([CFG.bbox.lat0,CFG.bbox.lng0],[CFG.bbox.lat1,CFG.bbox.lng1]);
   var BY_CODE={}; MRT.forEach(function(s){ BY_CODE[s.code]=s; });
   PLACES.forEach(function(p){ p.mrt=BY_CODE[p.mrt]; p.mrtW=Math.max(1,Math.round(p.mrtD/CFG.walk)); });
 
@@ -356,24 +351,20 @@ tbody tr:last-child td{border-bottom:none}
            p.lat.toFixed(6)+","+p.lng.toFixed(6)+"&travelmode=walking";
   }
 
-  var Embedded=L.TileLayer.extend({
-    initialize:function(theme,opts){ this._theme=theme; L.TileLayer.prototype.initialize.call(this,"",opts); },
-    getTileUrl:function(c){
-      var t=TILES[this._theme+"/"+this._getZoomForUrl()+"/"+c.x+"/"+c.y];
-      return t ? "data:image/webp;base64,"+t : BLANK;
-    }
-  });
-
-  var map=L.map("map",{scrollWheelZoom:false, zoomSnap:.25, minZoom:15, maxZoom:18,
-    maxBounds:BOUNDS.pad(.05), maxBoundsViscosity:.9});
-  var ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> · tiles embedded';
-  var tileOpts={minZoom:15, maxZoom:18, maxNativeZoom:17, tileSize:256, bounds:BOUNDS, attribution:ATTR, noWrap:true};
+  // Tiles come from CARTO's CDN. This page is served from GitHub Pages, where
+  // nothing stops it reaching a tile server, so the map pans and zooms as far
+  // as the viewer wants instead of being fenced into a box of baked-in tiles.
+  var map=L.map("map",{scrollWheelZoom:false, zoomSnap:.25, minZoom:3, maxZoom:19});
+  var ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
   var layer=null;
   function setTiles(){
-    var want=isDark()?"D":"L";
-    if(layer && layer._theme===want) return;
+    var want=isDark()?"dark_all":"light_all";
+    if(layer && layer._slug===want) return;
     if(layer) map.removeLayer(layer);
-    layer=new Embedded(want,tileOpts); layer.addTo(map); layer.bringToBack();
+    layer=L.tileLayer("https://{s}.basemaps.cartocdn.com/"+want+"/{z}/{x}/{y}{r}.png",
+      {subdomains:"abcd", maxZoom:19, detectRetina:true, attribution:ATTR});
+    layer._slug=want;
+    layer.addTo(map); layer.bringToBack();
   }
   setTiles();
   map.getContainer().addEventListener("click",function(){ map.scrollWheelZoom.enable(); });
@@ -555,7 +546,6 @@ tbody tr:last-child td{border-bottom:none}
         '<td class="c-note">'+noteHTML(p)+'</td>'+
         '<td class="num"><span class="c-dist">'+fmtM(row.d)+'</span><span class="c-walk">'+row.walk+' min walk</span></td>'+
         '<td><span class="pill '+p.mrt.line+'">'+p.mrt.code+'</span><span class="c-stn">'+esc(p.mrt.name)+' · '+p.mrtW+' min</span></td>'+
-        '<td class="c-addr">'+esc(p.addr)+'</td>'+
         '<td><a class="go" href="'+gmaps(p)+'" target="_blank" rel="noopener noreferrer" '+
           'aria-label="Walking directions from your location to '+esc(p.name)+' in Google Maps">Directions &#8599;</a></td>'+
         '</tr>';
@@ -585,20 +575,29 @@ tbody tr:last-child td{border-bottom:none}
     document.getElementById("live").textContent="Measuring from "+HOMES[k].name+".";
   }
 
-  // Switching datum re-measures everything from a different door, so put that
-  // door in the middle. Keep the viewer's zoom - they chose it - but come in to
-  // 15 if they are far enough out that a house is not a meaningful centre.
-  // maxBounds clamps the pan for a home near the edge, which is the right
-  // answer: the tiles stop there.
-  function recentre(H){
+  // Anything you pick becomes the thing the map is about: a house you are now
+  // measuring from, or a place you are looking at. Put it in the middle. Keep
+  // the viewer's zoom - they chose it - but come in to 15 if they are far
+  // enough out that a single building is not a meaningful centre.
+  function recentre(pt){
     var still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    map.setView([H.lat,H.lng], Math.max(map.getZoom(), 15),
+    map.setView([pt.lat,pt.lng], Math.max(map.getZoom(), 15),
                 {animate:!still, duration:.6});
   }
   function select(id){
     state.sel=(id && state.sel!==id) ? id : null;
     draw();
-    if(state.sel) placeMarkers[state.sel].openPopup();
+    if(state.sel){
+      var p=byId(state.sel);
+      if(p) recentre(p);
+      // Centre first, then open: autoPan has nothing left to do, so the map
+      // does not make a second, contrary move straight after the first.
+      placeMarkers[state.sel].openPopup();
+    }
+  }
+  function byId(id){
+    for(var i=0;i<PLACES.length;i++){ if(PLACES[i].id===id) return PLACES[i]; }
+    return null;
   }
 
   document.querySelector(".switch").addEventListener("click",function(e){
@@ -643,9 +642,9 @@ tbody tr:last-child td{border-bottom:none}
   // published page; fetching that tab here would put them in the network log
   // of a public site.
   //
-  // What a pull cannot do is re-cut the basemap. Tiles are baked in over a
-  // fixed box, so a new place outside it gets its row and its pin plus a
-  // warning that the map underneath is blank until somebody rebuilds.
+  // A pulled place is drawn wherever it is - the basemap is live, so there is
+  // no box for it to fall outside of. What a pull still does not do is write
+  // anything back; only a rebuild makes it permanent.
 
   var CSV_URL="https://docs.google.com/spreadsheets/d/"+CFG.sheet_id+
               "/export?format=csv&gid="+CFG.sheet_gid;
@@ -759,7 +758,7 @@ tbody tr:last-child td{border-bottom:none}
 
   function applySheet(sheet){
     var byAddr={}; PLACES.forEach(function(p){ byAddr[p.addr]=p; });
-    var kept=[], fresh=[], changed=0, outside=[];
+    var kept=[], fresh=[], changed=0;
 
     sheet.forEach(function(rec){
       var old=byAddr[rec.addr];
@@ -792,7 +791,6 @@ tbody tr:last-child td{border-bottom:none}
           rec.mrt=near.mrt; rec.mrtD=near.mrtD;
           rec.mrtW=Math.max(1,Math.round(near.mrtD/CFG.walk));
           rec.dir=rec.lng>=(CFG.bbox.lng0+CFG.bbox.lng1)/2?"right":"left";
-          if(!BOUNDS.contains([rec.lat,rec.lng])) outside.push(rec.name);
           added.push(rec);
         });
       });
@@ -826,10 +824,6 @@ tbody tr:last-child td{border-bottom:none}
       if(failed.length)
         msg+=' <span class="bad">OneMap could not place '+esc(failed.join(", "))+
              ". Check the address in the sheet.</span>";
-      if(outside.length)
-        msg+=' <span class="bad">'+esc(outside.join(", "))+
-             " sits outside the drawn area, so the map under that pin is blank"+
-             " until the page is rebuilt.</span>";
       if(bits.length)
         msg+=" This view only — run <b>./update.sh</b>, or the"+
              " <b>Refresh from sheet</b> action on GitHub, to make it stick.";
@@ -876,7 +870,7 @@ tbody tr:last-child td{border-bottom:none}
       'color:var(--ink-2);padding:24px;line-height:1.6">This map failed to draw: '+
       String(err&&err.message||err)+'<br>Re-run <b>./update.sh</b> and check the output.</p>';
     var rows=document.getElementById("rows");
-    if(rows) rows.innerHTML='<tr><td colspan="9" style="font-family:var(--mono);'+
+    if(rows) rows.innerHTML='<tr><td colspan="8" style="font-family:var(--mono);'+
       'font-size:12px;color:var(--ink-2)">No rows: '+String(err&&err.message||err)+'</td></tr>';
   }
 })();

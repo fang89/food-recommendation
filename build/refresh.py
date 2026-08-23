@@ -377,9 +377,11 @@ def main():
     mid = sum(p["lng"] for p in places) / len(places)
     for rec in places:
         rec["dir"] = "right" if rec["lng"] >= mid else "left"
-    hmid = sum(h["lng"] for h in homes) / len(homes)
+    # A home's label competes with the nearest station's pill more than with
+    # anything else on the map, so put it on the far side from that station.
     for home in homes:
-        home["dir"] = "right" if home["lng"] >= hmid else "left"
+        near = min(mrt, key=lambda s: haversine(home, s))
+        home["dir"] = "left" if near["lng"] > home["lng"] else "right"
 
     # Bbox must cover everything drawn, or tiles run out at the edge.
     pad  = cfg.get("bbox_pad_deg", 0.0012)
