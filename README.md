@@ -55,6 +55,13 @@ OneMap for genuinely new addresses. `--force` re-resolves everything.
 it, and inlines Leaflet, the tiles and the data into a single `index.html`. Tiles
 are cached per bounding box, so a refresh that does not move the map reuses them.
 
+**`build/smoke.py`** then runs the built page's script against a stubbed Leaflet
+and DOM, and fails if the map never got a view or the table body never got
+written. A syntax check passes happily on code that throws the moment it runs;
+this catches the blank-map case, which is otherwise indistinguishable from
+"no data yet". It proves the plumbing executes — it says nothing about how the
+page looks, so still open it.
+
 Read the warnings `refresh.py` prints. They are how the sheet tells you it has
 drifted.
 

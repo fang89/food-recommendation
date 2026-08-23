@@ -286,6 +286,7 @@ tbody tr:last-child td{border-bottom:none}
 <script>
 (function(){
   "use strict";
+  try{
   var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var CFG=/*__CONFIG__*/;
   var HOMES=/*__HOMES__*/;
@@ -601,9 +602,21 @@ tbody tr:last-child td{border-bottom:none}
   map.fitBounds(L.latLngBounds(
     PLACES.map(function(p){return [p.lat,p.lng];})
       .concat(MRT.map(function(s){return [s.lat,s.lng];}))
-      .concat([[HOMES.A.lat,HOMES.A.lng],[HOMES.B.lat,HOMES.B.lng]])
+      .concat(HOMES.map(function(h){return [h.lat,h.lng];}))
   ).pad(.06),{maxZoom:16});
   syncZoomClass();
   draw();
+  }catch(err){
+    // A blank map and an empty table are indistinguishable from "no data".
+    // Say what happened instead, so a bad refresh is obvious.
+    if(window.console) console.error(err);
+    var box=document.getElementById("map");
+    if(box) box.innerHTML='<p style="font-family:var(--mono);font-size:12px;'+
+      'color:var(--ink-2);padding:24px;line-height:1.6">This map failed to draw: '+
+      String(err&&err.message||err)+'<br>Re-run <b>./update.sh</b> and check the output.</p>';
+    var rows=document.getElementById("rows");
+    if(rows) rows.innerHTML='<tr><td colspan="9" style="font-family:var(--mono);'+
+      'font-size:12px;color:var(--ink-2)">No rows: '+String(err&&err.message||err)+'</td></tr>';
+  }
 })();
 </script>
