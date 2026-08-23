@@ -898,18 +898,6 @@ html{-webkit-text-size-adjust:100%}
                rating:cell("rating")};
       if(!rec.name||!rec.addr) continue;
 
-      // Ratings get typed into the wrong column, and not always by one place:
-      // one row has it in Minus, another has slipped two columns into Plus.
-      // Same recovery as build/refresh.py, in the same order.
-      if(!rec.rating){
-        var slots=["minus","plus","cat"];
-        for(var t=0;t<slots.length;t++){
-          var text=(rec[slots[t]]||"").trim();
-          if(!/^\d+(\.\d+)?$/.test(text)) continue;
-          var probe=parseFloat(text);
-          if(probe>=0&&probe<=5){ rec.rating=text; rec[slots[t]]=""; break; }
-        }
-      }
       var n=parseFloat(rec.rating);
       rec.rating=isNaN(n)?0:Math.round(n*10)/10;
       rec.price=(rec.price.replace(/[^$]/g,"")||"$").slice(0,3);

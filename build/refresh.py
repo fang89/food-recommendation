@@ -61,8 +61,14 @@ def read_sheets(blob):
         rows, xml = [], z.read(name).decode()
         for raw in re.findall(r"<row[^>]*>(.*?)</row>", xml, re.S):
             cells = {}
+            # An empty-but-styled cell is written self-closing - <c r="E5" s="1"/>
+            # - with no </c> of its own. Matching only <c ...>...</c> made such a
+            # cell swallow the NEXT cell's value and file it under its own letter,
+            # so a blank Minus quietly stole the Rating beside it. Match both forms.
             for ref, _row, attrs, inner in re.findall(
-                    r'<c r="([A-Z]+)(\d+)"([^>]*)>(.*?)</c>', raw, re.S):
+                    r'<c r="([A-Z]+)(\d+)"([^>]*?)(?:/>|>(.*?)</c>)', raw, re.S):
+                if not inner:
+                    continue
                 inline = re.search(r"<is>(.*?)</is>", inner, re.S)
                 value  = re.search(r"<v>(.*?)</v>", inner, re.S)
                 if inline:
@@ -108,26 +114,13 @@ def parse_places(rows, warnings):
         if not rec.get("name") or not rec.get("addr"):
             continue
 
-        # A rating typed into the Minus column: 0-5 numeric there, Rating empty.
-        # Ratings get typed into the wrong column, and not always by one place:
-        # one row has it in Minus, another has slipped two columns into Plus.
-        # A prose field holding nothing but a bare 0-5 number is a rating.
-        if not rec.get("rating"):
-            for field, column in (("minus", "Minus"), ("plus", "Plus"),
-                                  ("cat", "Category")):
-                text = rec.get(field, "").strip()
-                if not text:
-                    continue
-                try:
-                    probe = float(text)
-                except ValueError:
-                    continue
-                if 0 <= probe <= 5:
-                    rec["rating"] = rec.pop(field)
-                    warnings.append('%s: rating "%s" was in the %s column, not Rating '
-                                    "- moved it. Fix the sheet to silence this."
-                                    % (rec["name"], rec["rating"], column))
-                    break
+        # There was a rescue here that moved a bare 0-5 number out of Minus or
+        # Plus into Rating, on the theory that people mistype columns. Nobody
+        # had. Every case it "rescued" was this file's own xlsx reader stealing
+        # the Rating cell whenever the Minus beside it was empty - see
+        # read_sheets. The rescue made a parser bug look like a sheet habit and
+        # kept it alive for weeks, so it is gone: a rating in the wrong column
+        # now shows up as unrated and says so.
         try:
             rec["rating"] = round(float(rec.get("rating", 0)), 1)
         except ValueError:
@@ -282,11 +275,36 @@ def csv_crosscheck(cfg, places, warnings):
                         "the page's Pull from sheet button cannot work.")
         return
 
-    seen = set()
+    seen, csv_fields = set(), {}
     for row in rows[head + 1:]:
         get = lambda f: (row[col[f]].strip() if col.get(f, -1) < len(row) else "")
         if get("name") and get("addr"):
             seen.add((get("name"), get("addr")))
+            csv_fields[get("name")] = {f: get(f) for f in ("cat", "plus", "minus",
+                                                           "rating", "price")}
+
+    # Compare the CONTENT of every column too, not just which rows exist. This
+    # check used to stop at (name, address), which is why an xlsx reader that
+    # shifted a whole row's values one column left went unseen: the names and
+    # addresses still lined up perfectly.
+    for rec in places:
+        theirs = csv_fields.get(rec["name"])
+        if not theirs:
+            continue
+        for field in ("cat", "plus", "minus", "price"):
+            mine = str(rec.get(field, "")).strip()
+            if mine != theirs[field]:
+                warnings.append("%s: the two parsers disagree about %s - this build "
+                                "reads %r, the CSV reads %r." % (rec["name"], field,
+                                                                 mine, theirs[field]))
+        try:
+            same = abs(float(rec.get("rating") or 0) - float(theirs["rating"] or 0)) < 1e-9
+        except ValueError:
+            same = False
+        if not same:
+            warnings.append("%s: the two parsers disagree about rating - this build "
+                            "reads %r, the CSV reads %r."
+                            % (rec["name"], rec.get("rating"), theirs["rating"]))
 
     ours = {(p["name"], p["addr"]) for p in places}
     only_here = ours - seen

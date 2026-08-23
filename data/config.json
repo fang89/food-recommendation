@@ -8,13 +8,7 @@
     "Bay hse"
   ],
   "_home_overrides": "Homes whose postal code OneMap cannot resolve, keyed by the label on the sheet. Coordinates only: this file is public, and the postal codes and block numbers deliberately are not. Delete an entry once the sheet's own code resolves.",
-  "home_overrides": {
-    "Ben hse": {
-      "lat": 1.32112027780383,
-      "lng": 103.866786871368,
-      "why": "The code on the sheet has a digit wrong and resolves to nothing. These are the coordinates of the code the owner confirmed. Delete this entry once the sheet is corrected."
-    }
-  },
+  "home_overrides": {},
   "_walk_speed": "Metres per minute used for every walking estimate.",
   "walk_speed_m_per_min": 80,
   "_bbox": "Recomputed by refresh.py to cover every place, home and station. Changing it makes build.py fetch a fresh set of tiles.",

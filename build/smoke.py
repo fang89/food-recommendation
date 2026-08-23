@@ -168,9 +168,9 @@ var SHEET_CSV=[
   ",,,,,,,,",
   ",Name of place,Category,Plus,Minus,Rating (5 pt system),Price band,Link / Address,Other comments",
   ",Smoke Cafe,Cafe,\"bright, cheap\",queue,4.5,$,\"1 Test Rd, Singapore 209263\",",
-  ",Rating Slipped,Hawker food,good,4.0,,$$,\"2 Test Rd, Singapore 338731\",",
+  ",Blank Minus,Hawker food,good,,4.0,$$,\"2 Test Rd, Singapore 338731\",",
   ",\"Comma, Inc\",Chinese food,,,3.0,$,\"3 Test Rd, Singapore 208905\",",
-  ",Slipped Twice,Dessert,3.5,,,$,\"4 Test Rd, Singapore 207561\","
+  ",Rating In Minus,Dessert,,3.5,,$,\"4 Test Rd, Singapore 207561\","
 ].join("\n");
 
 var __fetched=[];
@@ -301,14 +301,20 @@ if(pulled["Smoke Cafe"].cat!=="Cafe")
   throw new Error("the Category column was not read");
 if(pulled["Smoke Cafe"].plus!=="bright, cheap")
   throw new Error("a quoted comma broke the CSV parser");
-// Ratings that slipped left must be recovered - one column, and two.
-if(!pulled["Rating Slipped"] || pulled["Rating Slipped"].rating!==4)
-  throw new Error("a rating left in the Minus column was not recovered");
-if(!pulled["Slipped Twice"] || pulled["Slipped Twice"].rating!==3.5)
-  throw new Error("a rating left in the Plus column was not recovered - got " +
-                  (pulled["Slipped Twice"] && pulled["Slipped Twice"].rating));
-if(pulled["Slipped Twice"].plus!=="")
-  throw new Error("a rating recovered from Plus was left behind in Plus as well");
+// A blank Minus must not disturb the Rating beside it. This is the shape that
+// broke the xlsx reader for weeks: the empty cell swallowed its neighbour.
+if(!pulled["Blank Minus"] || pulled["Blank Minus"].rating!==4)
+  throw new Error("a row with an empty Minus lost its rating - got " +
+                  (pulled["Blank Minus"] && pulled["Blank Minus"].rating));
+if(pulled["Blank Minus"].minus!=="")
+  throw new Error("an empty Minus came back as " +
+                  JSON.stringify(pulled["Blank Minus"].minus));
+// A rating genuinely typed into Minus is left where it is and reads as unrated.
+// It used to be silently moved, which made a parser bug look like a sheet habit.
+if(pulled["Rating In Minus"].rating!==0)
+  throw new Error("a number in the Minus column was quietly promoted to a rating");
+if(pulled["Rating In Minus"].minus!=="3.5")
+  throw new Error("the Minus column was rewritten behind the sheet's back");
 
 "ok " + __calls["circleMarker"] + " markers, " + __calls["circle"] + " rings, " +
   HOMES.length + " homes, pull ok";
