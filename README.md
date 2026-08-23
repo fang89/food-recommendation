@@ -148,8 +148,9 @@ are the only things fetched at runtime.
   Chinatown and the page confidently called it a 41-minute walk from Farrer Park.
 - **The map opens on the neighbourhood**, not on every pin. A place beyond the
   drawn stations still gets its pin and its row; clicking the row flies there.
-- **Category comes from the sheet** and drives the filter chips above the list.
-  Adding a new category to the sheet adds a chip — there is nothing to edit here.
+- **Category and Recommended by come from the sheet.** Category drives the filter
+  chips above the list; adding a new one to the sheet adds a chip, with nothing
+  to edit here. Recommended by is its own sortable column.
 - **Both themes ship.** The tile layer swaps with the viewer's light/dark setting.
 - **It is a real HTML document** — doctype, `<head>`, and a `width=device-width`
   viewport. It shipped for a while as a bare fragment, because the Artifact host
@@ -218,16 +219,6 @@ On a touch screen Leaflet's dragging handler is switched off at load. That is
 what leaves `touch-action` at `pan-x pan-y`, which is what lets the browser keep
 the one-finger scroll for itself. It has to be decided before the first gesture,
 because `touch-action` is read when a gesture begins.
-
-## The workings, on the page itself
-
-Below a deliberately loud rule at the bottom of the page there is a section
-explaining how the page is built and listing six things that turned out to be
-wrong along the way — the baked-in basemap, the restaurant next to Chinatown
-reported as a walk from Farrer Park, the empty spreadsheet cell that swallowed
-its neighbour, the missing viewport, distance mistaken for time, and Leaflet's
-flag. Its statistics are counted from the data on the page at render time, so
-they cannot go stale, and they follow whichever house is the datum.
 
 ## Caveats
 

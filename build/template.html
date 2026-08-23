@@ -218,7 +218,7 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 
 /* ---- sortable list ---- */
 .tablewrap{overflow-x:auto; background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow)}
-table{border-collapse:collapse; width:100%; min-width:1180px}
+table{border-collapse:collapse; width:100%; min-width:1250px}
 thead th{text-align:left; padding:0; border-bottom:1px solid var(--rule); background:var(--sheet-2); white-space:nowrap; vertical-align:bottom}
 th .lbl2, th button{display:block; width:100%; text-align:left; padding:11px 14px; font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3)}
 th button{appearance:none; background:transparent; border:0; cursor:pointer; transition:color .15s, background .15s}
@@ -238,13 +238,45 @@ td{padding:13px 14px; border-bottom:1px solid var(--rule-soft); vertical-align:t
 tbody tr:last-child td{border-bottom:none}
 /* The lead column. Right-aligned so the minutes line up against each other -
    they are there to be compared - but padded off the edge so they do not sit
-   flush against the rule. */
-th.first, td.first{width:1%; white-space:nowrap; padding-left:18px}
+   flush against the rule.
+
+   A definite width, not width:1%. Under auto table layout a percentage column
+   takes a share of whatever slack the table has left over, and the slack grows
+   as the content shrinks - so measuring from the nearest house, where every
+   value is "3 min / walk 217 m", made this column swell to 259px and stranded
+   its right-aligned numbers half a column from their label. */
+/* A definite width, and the second line is allowed to wrap inside it.
+   It used to be nowrap, which made the whole column as wide as its single
+   longest row: from Bay hse one journey reads "bus + train - 11 min walk -
+   1 change", so the column stretched to fit 36 characters and every "3 min"
+   beside it right-aligned to the far edge, a hand's width from its own
+   heading. Nothing was misaligned - one row was twice as wide as the rest. */
+th.first, td.first{width:136px; padding-left:18px}
+td.first .c-dist{white-space:nowrap}
+
+/* The table is held at min-width:1180px, so on most screens it is wider than
+   its contents and the browser has slack to hand out. Under auto layout it
+   shares that slack around, and the share moves with the content - measuring
+   from the nearest house shrinks every value in the lead column, which then
+   swelled to 259px and stranded its right-aligned numbers half a column away
+   from their own label. Naming one column as the place the slack goes fixes
+   every other column at the width it asked for. Prose is the right absorber. */
+th.grow{width:100%}
+/* Who put it on the list. Three names, one word each, so it reads as a tag
+   rather than a column of prose. */
+th.by, td.by{width:1%; white-space:nowrap}
+.who{display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2);
+  background:var(--sheet-2); border:1px solid var(--rule); border-radius:100px; padding:3px 9px}
+.card-cat .who{margin-left:7px; vertical-align:1px; background:transparent}
+/* Names and notes are the two columns that can take the slack; without a share
+   of it the names wrap to four lines while the notes run on for a paragraph. */
+th.wide{width:22%}
 .c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
 .c-cat{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
 .c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
 .c-walk.est{opacity:.72; font-style:italic}
-.c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
+.c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; display:block; margin-top:3px; line-height:1.4}
 .pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
 .pill.NE{background:var(--ne)} .pill.DT{background:var(--dt)} .pill.EW{background:var(--ew)}
 /* The rest of the network. Only these three lines are drawn on the map, but
@@ -285,50 +317,6 @@ html{-webkit-text-size-adjust:100%}
   .sec-head .note{font-size:10px; letter-spacing:.02em}
   .legend{gap:7px 14px; font-size:10px}
   .maphint{font-size:10px; letter-spacing:.02em; white-space:normal}
-}
-
-/* ---- below the line ---- */
-/* A deliberately loud break. Everything above is about where to eat; nothing
-   below is, and the rule is there so nobody reads on expecting more of it. */
-.brk{height:0; margin:clamp(34px,6vw,64px) 0 0; border:0; border-top:8px solid var(--ink)}
-.method{padding-top:clamp(20px,3vw,30px)}
-.method-kicker{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--accent-ink); margin:0 0 8px}
-.method h2{font-family:var(--display); font-weight:800; font-size:clamp(25px,3.4vw,34px);
-  letter-spacing:-.022em; line-height:1.05; margin:0 0 10px; text-wrap:balance}
-.method .lede{font-family:var(--body); font-size:17.5px; line-height:1.5; color:var(--ink-2);
-  max-width:64ch; margin:0 0 clamp(22px,3vw,30px)}
-.method h3{font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--ink-3); margin:clamp(26px,3.4vw,36px) 0 12px;
-  padding-bottom:7px; border-bottom:1px solid var(--rule)}
-.method p{font-family:var(--body); font-size:16.5px; line-height:1.55; max-width:66ch; margin:0 0 12px}
-.method p b{font-weight:600; color:var(--ink)}
-.method code{font-family:var(--mono); font-size:.86em; background:var(--sheet-2);
-  border:1px solid var(--rule-soft); border-radius:3px; padding:1px 5px; white-space:nowrap}
-
-.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:1px;
-  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:0 0 6px}
-.fact{background:var(--sheet); padding:13px 15px 14px}
-.fact b{display:block; font-family:var(--display); font-weight:700; font-size:26px;
-  letter-spacing:-.03em; line-height:1.05; color:var(--ink); font-variant-numeric:tabular-nums}
-.fact b small{font-size:13px; font-weight:600; letter-spacing:0; color:var(--ink-3); margin-left:2px}
-.fact span{display:block; margin-top:5px; font-family:var(--mono); font-size:9.5px;
-  letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); line-height:1.4}
-
-.method ol{counter-reset:w; list-style:none; margin:0; padding:0}
-.method ol li{counter-increment:w; position:relative; padding:0 0 0 42px; margin:0 0 20px; max-width:70ch}
-.method ol li::before{content:counter(w,decimal-leading-zero); position:absolute; left:0; top:2px;
-  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--accent)}
-.method ol li p{margin:0}
-.method ol li p+p{margin-top:7px; color:var(--ink-2); font-size:15.5px}
-.method ul{margin:0; padding:0; list-style:none}
-.method ul li{position:relative; padding-left:18px; margin-bottom:11px; max-width:70ch;
-  font-family:var(--body); font-size:16.5px; line-height:1.5}
-.method ul li::before{content:"—"; position:absolute; left:0; color:var(--ink-3)}
-@media (max-width:640px){
-  .brk{border-top-width:6px}
-  .method .lede{font-size:16px}
-  .fact b{font-size:22px}
 }
 
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
@@ -386,10 +374,11 @@ html{-webkit-text-size-adjust:100%}
         <thead>
           <tr>
             <th class="num first" scope="col" data-sort="dist" aria-sort="ascending"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
-            <th scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
+            <th class="wide" scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
+            <th class="by" scope="col" data-sort="by" aria-sort="none"><button type="button">By<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="rating" aria-sort="none"><button type="button">Rating<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="price" aria-sort="none"><button type="button">Price<span class="car">&#9650;</span></button></th>
-            <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
+            <th class="grow" scope="col"><span class="lbl2">Plus &amp; minus</span></th>
             <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Go</span></th>
           </tr>
@@ -402,110 +391,6 @@ html{-webkit-text-size-adjust:100%}
   <footer class="colophon">
     <span id="colo">10 places</span> · source: Google Sheet, refreshed 23 Aug 2026 · geocoded with <b>OneMap SG</b> · straight-line distances, allow 15–30% more on foot · basemap <b>CARTO</b> on <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>
   </footer>
-
-  <hr class="brk">
-
-  <section class="method" aria-labelledby="methodh">
-    <p class="method-kicker">Below the line &middot; not a recommendation</p>
-    <h2>The workings</h2>
-    <p class="lede" id="methodh">Everything above answers one question: where should we eat.
-      Everything below answers a different one — how the page that answers it is put
-      together, and what it got embarrassingly wrong on the way.</p>
-
-    <h3>Where it comes from</h3>
-    <p>One Google Sheet, seven columns, filled in by hand after eating. A build script
-      pulls it as a spreadsheet file, asks <b>OneMap</b> — Singapore&rsquo;s national mapping
-      service — where each address is, then asks again how long it takes to get there
-      from each house, on foot and by public transport. That produces four small JSON
-      files. A second script inlines Leaflet and those files into a single
-      <code>index.html</code>, which GitHub Pages serves. A scheduled job re-runs the
-      whole thing every Monday morning, so the page does not rot if nobody touches it.</p>
-    <p>There are three ways to update it, in increasing order of permanence:
-      <b>Pull from sheet</b> re-reads the sheet in your browser and changes only what you
-      are looking at; a <b>Refresh</b> button on GitHub rebuilds and republishes without a
-      terminal; <code>./update.sh</code> does it locally.</p>
-
-    <h3>The state of things</h3>
-    <div class="facts" id="facts"></div>
-    <p style="font-size:14.5px;color:var(--ink-3);margin-top:9px">Counted from the data on
-      this page, not typed in — so they cannot quietly go stale.</p>
-
-    <h3>Six things that were wrong</h3>
-    <ol>
-      <li>
-        <p><b>The map used to carry its own map.</b> About two hundred basemap tiles were
-          baked into the page as base64 text — three megabytes of it — and the map was
-          fenced to exactly the area they covered.</p>
-        <p>The reason was real, and then stopped being real: this page was first built as
-          a Claude Artifact, where a strict security policy blocks every request to another
-          host, so the tiles had to travel inside the file. It then moved to GitHub Pages,
-          where nothing blocks a tile server, and nobody rechecked the assumption for
-          weeks. Live tiles now: the page dropped to a quarter of a megabyte and pans
-          anywhere in the world.</p>
-      </li>
-      <li>
-        <p><b>A restaurant 43 metres from Chinatown station was reported as a 41-minute
-          walk from Farrer Park.</b></p>
-        <p>Nearest-station was being computed against the seven stations drawn on the map.
-          That is correct while every place is in the neighbourhood and silently wrong the
-          moment one is not. The arithmetic was never the bug; the candidate set was. The
-          page now carries the entire network.</p>
-      </li>
-      <li>
-        <p><b>Six ratings appeared to have been typed into the wrong column. None of them
-          had.</b></p>
-        <p>An empty spreadsheet cell that carries formatting is written self-closing —
-          <code>&lt;c r="E5" s="1"/&gt;</code> — with no closing tag of its own. The reader
-          matched only paired tags, so an empty cell ran on and swallowed the value of the
-          cell beside it. Every row with a blank <i>Minus</i> had its rating eaten. Worse
-          than the bug was the helpful fix built on top of it, which moved stray numbers
-          back into place and so made a parser fault look like a human habit — and printed
-          six warnings a build telling the owner to correct a sheet that was already
-          correct.</p>
-      </li>
-      <li>
-        <p><b>On a phone the whole page was laid out 980 pixels wide and shrunk to fit.</b></p>
-        <p>It had shipped without a viewport declaration, because the Artifact host used to
-          supply the surrounding document and Pages supplies nothing. Desktop browsers
-          cannot reproduce it, which is why it survived every screenshot.</p>
-      </li>
-      <li>
-        <p><b>Distance is not time.</b> Four kilometres to Chinatown reads as far away. It
-          is seventeen minutes on the North East line.</p>
-        <p>The column now shows measured travel time and names the mode, because a bare
-          number of minutes is useless if you cannot tell whether you are walking it. One
-          place on this list is quickest by bus.</p>
-      </li>
-      <li>
-        <p><b>Leaflet ships a Ukrainian flag</b> inside its own attribution string. Naming
-          the attribution ourselves keeps the credit and drops the flag.</p>
-      </li>
-    </ol>
-
-    <h3>Things it deliberately does not do</h3>
-    <ul>
-      <li>No analytics, no cookies, no tracking, no fonts phoning home beyond Google&rsquo;s
-        stylesheet. Nothing is recorded about you reading this.</li>
-      <li>The houses are anchors for every measurement on the page, but no postal code or
-        block number appears anywhere in the source — only coordinates. That was a decision,
-        and it is enforced on every build.</li>
-      <li>It never guesses. A place it cannot route keeps a straight-line estimate and says
-        so in italics; a rating in the wrong column reads as unrated rather than being
-        quietly moved.</li>
-    </ul>
-
-    <h3>How it knows it still works</h3>
-    <p>Two entirely separate readers parse the same sheet — Python over the spreadsheet
-      file, JavaScript over the CSV export — and every build compares them column by column.
-      That cross-check is the only reason problem three above was findable at all: the names
-      and addresses lined up perfectly while the values beside them were shifted one place
-      left.</p>
-    <p>A smoke test then runs the built page&rsquo;s own code against a stubbed browser and
-      fails the build if the map never gets a view, the table never gets written, or the
-      <b>Pull from sheet</b> button cannot complete a round trip. Every fix listed above
-      arrived with a test, and every test was checked by putting the bug back and watching
-      it fail.</p>
-  </section>
 
 </div>
 
@@ -678,6 +563,7 @@ html{-webkit-text-size-adjust:100%}
   var state={home:0, sel:null, cat:null, sortKey:"dist", sortDir:1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
+    by:function(a,b){ return (a.p.by||"~").localeCompare(b.p.by||"~") || b.p.rating-a.p.rating; },
     dist:function(a,b){ return tripMin(a)-tripMin(b) || a.d-b.d; },
     mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
     rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
@@ -759,7 +645,7 @@ html{-webkit-text-size-adjust:100%}
   function drawEmpty(H){
     gRings.clearLayers(); gLines.clearLayers();
     document.getElementById("rows").innerHTML=
-      '<tr><td colspan="7" class="c-none" style="padding:22px 14px">Nothing in that category.</td></tr>';
+      '<tr><td colspan="8" class="c-none" style="padding:22px 14px">Nothing in that category.</td></tr>';
     document.getElementById("capRing").textContent="no places shown";
   }
 
@@ -773,38 +659,6 @@ html{-webkit-text-size-adjust:100%}
     order.sort(function(a,b){ return n[b]-n[a] || a.localeCompare(b); });
     return order.map(function(c){ return {name:c, n:n[c]}; });
   })();
-
-  // Counted from the data actually on the page. A hand-typed "21 places" is
-  // wrong the first time somebody adds one; this cannot be.
-  function drawFacts(){
-    var H=HOMES[state.home], mins=[], routed=0, cats={}, nc=0;
-    PLACES.forEach(function(p){
-      var t=trip(H,p);
-      if(t){ routed++; mins.push(t.min); }
-      var c=p.cat||"?"; if(!(c in cats)){ cats[c]=1; nc++; }
-    });
-    mins.sort(function(a,b){ return a-b; });
-    var quick=mins[0], slow=mins[mins.length-1];
-    var near=mins.filter(function(m){ return m<=15; }).length;
-    var nav=(window.performance&&performance.getEntriesByType)
-            ? (performance.getEntriesByType("navigation")[0]||{}) : {};
-    var kb=nav.encodedBodySize ? Math.round(nav.encodedBodySize/1024) : null;
-    var pairs=0; for(var k in ROUTES) pairs++;
-
-    function cell(v,u,label){
-      return '<div class="fact"><b>'+v+(u?'<small>'+u+'</small>':'')+'</b><span>'+label+'</span></div>';
-    }
-    document.getElementById("facts").innerHTML=
-      cell(PLACES.length,"","places eaten at")+
-      cell(nc,"","categories")+
-      cell(HOMES.length,"","houses to measure from")+
-      cell(STATIONS.length,"","mrt stations aboard")+
-      cell(pairs,"","journeys costed")+
-      (mins.length ? cell(quick,"min","quickest from "+esc(H.name)) : "")+
-      (mins.length ? cell(slow,"min","furthest from "+esc(H.name)) : "")+
-      (mins.length ? cell(Math.round(near/mins.length*100),"%","within 15 minutes") : "")+
-      (kb ? cell(kb,"kb","this whole page") : "");
-  }
 
   function drawChips(){
     var box=document.getElementById("chips");
@@ -902,7 +756,8 @@ html{-webkit-text-size-adjust:100%}
       m.setPopupContent(
         '<div class="card">'+
           '<div class="card-head">'+
-            '<p class="card-cat">'+esc(p.cat)+'</p>'+
+            '<p class="card-cat">'+esc(p.cat)+
+              (p.by?' <span class="who">'+esc(p.by)+'</span>':'')+'</p>'+
             '<h3 class="card-name">'+esc(p.name)+'</h3>'+
           '</div>'+
           '<div class="card-grid">'+
@@ -944,6 +799,7 @@ html{-webkit-text-size-adjust:100%}
       return '<tr data-place="'+p.id+'" tabindex="0" aria-selected="'+(on?"true":"false")+'">'+
         '<td class="num first"><span class="c-dist">'+tripMin(row)+' min</span>'+tripLine(row)+'</td>'+
         '<td class="c-name">'+esc(p.name)+'<span class="c-cat">'+esc(p.cat)+'</span></td>'+
+        '<td class="by">'+(p.by?'<span class="who">'+esc(p.by)+'</span>':'')+'</td>'+
         '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
         '<td>'+priceBar(p.price)+'</td>'+
         '<td class="c-note">'+noteHTML(p)+'</td>'+
@@ -961,7 +817,6 @@ html{-webkit-text-size-adjust:100%}
     });
 
     document.getElementById("thFrom").textContent="From "+H.name;
-    if(document.getElementById("facts").innerHTML) drawFacts();
     document.getElementById("colo").textContent=
       PLACES.length+" places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
     Array.prototype.forEach.call(document.querySelectorAll(".switch button"),function(b){
@@ -1079,7 +934,8 @@ html{-webkit-text-size-adjust:100%}
   // these are PREFIXES, because the real headers are qualified - "Rating
   // (5 pt system)", "Price band". "Category" replaced "Signature dish
   // tried" in the sheet, so both prefixes are listed and the first present wins.
-  var COLS=[["name of place","name"],["category","cat"],["signature dish","cat"],["plus","plus"],
+  var COLS=[["name of place","name"],["category","cat"],["signature dish","cat"],
+            ["recommended by","by"],["plus","plus"],
             ["minus","minus"],["rating","rating"],["price","price"],
             ["link / address","addr"],["address","addr"]];
 
@@ -1109,7 +965,7 @@ html{-webkit-text-size-adjust:100%}
     for(var r=head+1;r<rows.length;r++){
       var line=rows[r];
       var cell=function(f){ var x=col[f]; return x===undefined?"":(line[x]||"").trim(); };
-      var rec={name:cell("name"), cat:cell("cat"), plus:cell("plus"),
+      var rec={name:cell("name"), cat:cell("cat"), by:cell("by"), plus:cell("plus"),
                minus:cell("minus"), addr:cell("addr"), price:cell("price"),
                rating:cell("rating")};
       if(!rec.name||!rec.addr) continue;
@@ -1163,11 +1019,11 @@ html{-webkit-text-size-adjust:100%}
       var old=byAddr[rec.addr];
       if(old){
         delete byAddr[rec.addr];
-        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.cat].join("");
-        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.cat].join("");
+        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.cat,old.by].join("");
+        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.cat,rec.by].join("");
         if(was!==now) changed++;
         old.name=rec.name; old.rating=rec.rating; old.price=rec.price;
-        old.plus=rec.plus; old.minus=rec.minus; old.cat=rec.cat;
+        old.plus=rec.plus; old.minus=rec.minus; old.cat=rec.cat; old.by=rec.by;
         old.short=shortName(rec.name);
         kept.push(old);
       } else {
@@ -1268,7 +1124,6 @@ html{-webkit-text-size-adjust:100%}
   syncZoomClass();
   drawChips();
   draw();
-  drawFacts();
   }catch(err){
     // A blank map and an empty table are indistinguishable from "no data".
     // Say what happened instead, so a bad refresh is obvious.
@@ -1278,7 +1133,7 @@ html{-webkit-text-size-adjust:100%}
       'color:var(--ink-2);padding:24px;line-height:1.6">This map failed to draw: '+
       String(err&&err.message||err)+'<br>Re-run <b>./update.sh</b> and check the output.</p>';
     var rows=document.getElementById("rows");
-    if(rows) rows.innerHTML='<tr><td colspan="7" style="font-family:var(--mono);'+
+    if(rows) rows.innerHTML='<tr><td colspan="8" style="font-family:var(--mono);'+
       'font-size:12px;color:var(--ink-2)">No rows: '+String(err&&err.message||err)+'</td></tr>';
   }
 })();

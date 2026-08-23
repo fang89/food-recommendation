@@ -30,7 +30,8 @@ ONEMAP   = "https://www.onemap.gov.sg/api/common/elastic/search"
 
 # Header text -> field name.  Matching is case-insensitive on the prefix, so
 # "Rating (5 pt system)" and a later "Rating /5" both land on `rating`.
-COLUMNS = [("name of place", "name"), ("category", "cat"), ("signature dish", "cat"), ("plus", "plus"),
+COLUMNS = [("name of place", "name"), ("category", "cat"), ("signature dish", "cat"),
+           ("recommended by", "by"), ("plus", "plus"),
            ("minus", "minus"), ("rating", "rating"), ("price", "price"),
            ("link / address", "addr"), ("address", "addr")]
 
@@ -134,6 +135,7 @@ def parse_places(rows, warnings):
         rec["plus"]  = rec.get("plus", "")
         rec["minus"] = rec.get("minus", "")
         rec["cat"]   = rec.get("cat", "")
+        rec["by"]    = rec.get("by", "")
         out.append(rec)
     return out
 
@@ -241,6 +243,11 @@ def haversine(a, b):
 def csv_crosscheck(cfg, places, warnings):
     """Compare what we read from the .xlsx with what the page's own pull reads.
 
+    Note that these are two separate downloads of the same sheet. A sheet being
+    edited while the build runs can therefore report a disagreement that is
+    really just a few seconds of drift - if a warning here names one field of
+    one row, rebuild before going looking for a bug.
+
     The published page re-reads this sheet in the browser, over
     /export?format=csv, with a second parser. If the two disagree about a name
     or an address, every pull will report places as new-and-removed forever and
@@ -281,8 +288,8 @@ def csv_crosscheck(cfg, places, warnings):
         get = lambda f: (row[col[f]].strip() if col.get(f, -1) < len(row) else "")
         if get("name") and get("addr"):
             seen.add((get("name"), get("addr")))
-            csv_fields[get("name")] = {f: get(f) for f in ("cat", "plus", "minus",
-                                                           "rating", "price")}
+            csv_fields[get("name")] = {f: get(f) for f in ("cat", "by", "plus",
+                                                           "minus", "rating", "price")}
 
     # Compare the CONTENT of every column too, not just which rows exist. This
     # check used to stop at (name, address), which is why an xlsx reader that
@@ -292,7 +299,7 @@ def csv_crosscheck(cfg, places, warnings):
         theirs = csv_fields.get(rec["name"])
         if not theirs:
             continue
-        for field in ("cat", "plus", "minus", "price"):
+        for field in ("cat", "by", "plus", "minus", "price"):
             mine = str(rec.get(field, "")).strip()
             if mine != theirs[field]:
                 warnings.append("%s: the two parsers disagree about %s - this build "
@@ -629,7 +636,7 @@ def main():
         json.dump(cfg, open(CONFIG, "w"), indent=2)
 
     # Ids are assigned below, so route lookup happens after them.
-    order = ["id", "name", "short", "cat", "lat", "lng", "addr", "price",
+    order = ["id", "name", "short", "cat", "by", "lat", "lng", "addr", "price",
              "plus", "minus", "rating", "mrt", "mrtD", "dir", "matched"]
     shorts = cfg.get("short_names", {})
     for rec in places:

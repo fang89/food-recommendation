@@ -879,7 +879,7 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 
 /* ---- sortable list ---- */
 .tablewrap{overflow-x:auto; background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow)}
-table{border-collapse:collapse; width:100%; min-width:1180px}
+table{border-collapse:collapse; width:100%; min-width:1250px}
 thead th{text-align:left; padding:0; border-bottom:1px solid var(--rule); background:var(--sheet-2); white-space:nowrap; vertical-align:bottom}
 th .lbl2, th button{display:block; width:100%; text-align:left; padding:11px 14px; font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3)}
 th button{appearance:none; background:transparent; border:0; cursor:pointer; transition:color .15s, background .15s}
@@ -899,13 +899,45 @@ td{padding:13px 14px; border-bottom:1px solid var(--rule-soft); vertical-align:t
 tbody tr:last-child td{border-bottom:none}
 /* The lead column. Right-aligned so the minutes line up against each other -
    they are there to be compared - but padded off the edge so they do not sit
-   flush against the rule. */
-th.first, td.first{width:1%; white-space:nowrap; padding-left:18px}
+   flush against the rule.
+
+   A definite width, not width:1%. Under auto table layout a percentage column
+   takes a share of whatever slack the table has left over, and the slack grows
+   as the content shrinks - so measuring from the nearest house, where every
+   value is "3 min / walk 217 m", made this column swell to 259px and stranded
+   its right-aligned numbers half a column from their label. */
+/* A definite width, and the second line is allowed to wrap inside it.
+   It used to be nowrap, which made the whole column as wide as its single
+   longest row: from Bay hse one journey reads "bus + train - 11 min walk -
+   1 change", so the column stretched to fit 36 characters and every "3 min"
+   beside it right-aligned to the far edge, a hand's width from its own
+   heading. Nothing was misaligned - one row was twice as wide as the rest. */
+th.first, td.first{width:136px; padding-left:18px}
+td.first .c-dist{white-space:nowrap}
+
+/* The table is held at min-width:1180px, so on most screens it is wider than
+   its contents and the browser has slack to hand out. Under auto layout it
+   shares that slack around, and the share moves with the content - measuring
+   from the nearest house shrinks every value in the lead column, which then
+   swelled to 259px and stranded its right-aligned numbers half a column away
+   from their own label. Naming one column as the place the slack goes fixes
+   every other column at the width it asked for. Prose is the right absorber. */
+th.grow{width:100%}
+/* Who put it on the list. Three names, one word each, so it reads as a tag
+   rather than a column of prose. */
+th.by, td.by{width:1%; white-space:nowrap}
+.who{display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2);
+  background:var(--sheet-2); border:1px solid var(--rule); border-radius:100px; padding:3px 9px}
+.card-cat .who{margin-left:7px; vertical-align:1px; background:transparent}
+/* Names and notes are the two columns that can take the slack; without a share
+   of it the names wrap to four lines while the notes run on for a paragraph. */
+th.wide{width:22%}
 .c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
 .c-cat{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
 .c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
 .c-walk.est{opacity:.72; font-style:italic}
-.c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
+.c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; display:block; margin-top:3px; line-height:1.4}
 .pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
 .pill.NE{background:var(--ne)} .pill.DT{background:var(--dt)} .pill.EW{background:var(--ew)}
 /* The rest of the network. Only these three lines are drawn on the map, but
@@ -946,50 +978,6 @@ html{-webkit-text-size-adjust:100%}
   .sec-head .note{font-size:10px; letter-spacing:.02em}
   .legend{gap:7px 14px; font-size:10px}
   .maphint{font-size:10px; letter-spacing:.02em; white-space:normal}
-}
-
-/* ---- below the line ---- */
-/* A deliberately loud break. Everything above is about where to eat; nothing
-   below is, and the rule is there so nobody reads on expecting more of it. */
-.brk{height:0; margin:clamp(34px,6vw,64px) 0 0; border:0; border-top:8px solid var(--ink)}
-.method{padding-top:clamp(20px,3vw,30px)}
-.method-kicker{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--accent-ink); margin:0 0 8px}
-.method h2{font-family:var(--display); font-weight:800; font-size:clamp(25px,3.4vw,34px);
-  letter-spacing:-.022em; line-height:1.05; margin:0 0 10px; text-wrap:balance}
-.method .lede{font-family:var(--body); font-size:17.5px; line-height:1.5; color:var(--ink-2);
-  max-width:64ch; margin:0 0 clamp(22px,3vw,30px)}
-.method h3{font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--ink-3); margin:clamp(26px,3.4vw,36px) 0 12px;
-  padding-bottom:7px; border-bottom:1px solid var(--rule)}
-.method p{font-family:var(--body); font-size:16.5px; line-height:1.55; max-width:66ch; margin:0 0 12px}
-.method p b{font-weight:600; color:var(--ink)}
-.method code{font-family:var(--mono); font-size:.86em; background:var(--sheet-2);
-  border:1px solid var(--rule-soft); border-radius:3px; padding:1px 5px; white-space:nowrap}
-
-.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:1px;
-  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:0 0 6px}
-.fact{background:var(--sheet); padding:13px 15px 14px}
-.fact b{display:block; font-family:var(--display); font-weight:700; font-size:26px;
-  letter-spacing:-.03em; line-height:1.05; color:var(--ink); font-variant-numeric:tabular-nums}
-.fact b small{font-size:13px; font-weight:600; letter-spacing:0; color:var(--ink-3); margin-left:2px}
-.fact span{display:block; margin-top:5px; font-family:var(--mono); font-size:9.5px;
-  letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); line-height:1.4}
-
-.method ol{counter-reset:w; list-style:none; margin:0; padding:0}
-.method ol li{counter-increment:w; position:relative; padding:0 0 0 42px; margin:0 0 20px; max-width:70ch}
-.method ol li::before{content:counter(w,decimal-leading-zero); position:absolute; left:0; top:2px;
-  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--accent)}
-.method ol li p{margin:0}
-.method ol li p+p{margin-top:7px; color:var(--ink-2); font-size:15.5px}
-.method ul{margin:0; padding:0; list-style:none}
-.method ul li{position:relative; padding-left:18px; margin-bottom:11px; max-width:70ch;
-  font-family:var(--body); font-size:16.5px; line-height:1.5}
-.method ul li::before{content:"—"; position:absolute; left:0; color:var(--ink-3)}
-@media (max-width:640px){
-  .brk{border-top-width:6px}
-  .method .lede{font-size:16px}
-  .fact b{font-size:22px}
 }
 
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
@@ -1047,10 +1035,11 @@ html{-webkit-text-size-adjust:100%}
         <thead>
           <tr>
             <th class="num first" scope="col" data-sort="dist" aria-sort="ascending"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
-            <th scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
+            <th class="wide" scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
+            <th class="by" scope="col" data-sort="by" aria-sort="none"><button type="button">By<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="rating" aria-sort="none"><button type="button">Rating<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="price" aria-sort="none"><button type="button">Price<span class="car">&#9650;</span></button></th>
-            <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
+            <th class="grow" scope="col"><span class="lbl2">Plus &amp; minus</span></th>
             <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
             <th scope="col"><span class="lbl2">Go</span></th>
           </tr>
@@ -1063,110 +1052,6 @@ html{-webkit-text-size-adjust:100%}
   <footer class="colophon">
     <span id="colo">10 places</span> · source: Google Sheet, refreshed 23 Aug 2026 · geocoded with <b>OneMap SG</b> · straight-line distances, allow 15–30% more on foot · basemap <b>CARTO</b> on <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>
   </footer>
-
-  <hr class="brk">
-
-  <section class="method" aria-labelledby="methodh">
-    <p class="method-kicker">Below the line &middot; not a recommendation</p>
-    <h2>The workings</h2>
-    <p class="lede" id="methodh">Everything above answers one question: where should we eat.
-      Everything below answers a different one — how the page that answers it is put
-      together, and what it got embarrassingly wrong on the way.</p>
-
-    <h3>Where it comes from</h3>
-    <p>One Google Sheet, seven columns, filled in by hand after eating. A build script
-      pulls it as a spreadsheet file, asks <b>OneMap</b> — Singapore&rsquo;s national mapping
-      service — where each address is, then asks again how long it takes to get there
-      from each house, on foot and by public transport. That produces four small JSON
-      files. A second script inlines Leaflet and those files into a single
-      <code>index.html</code>, which GitHub Pages serves. A scheduled job re-runs the
-      whole thing every Monday morning, so the page does not rot if nobody touches it.</p>
-    <p>There are three ways to update it, in increasing order of permanence:
-      <b>Pull from sheet</b> re-reads the sheet in your browser and changes only what you
-      are looking at; a <b>Refresh</b> button on GitHub rebuilds and republishes without a
-      terminal; <code>./update.sh</code> does it locally.</p>
-
-    <h3>The state of things</h3>
-    <div class="facts" id="facts"></div>
-    <p style="font-size:14.5px;color:var(--ink-3);margin-top:9px">Counted from the data on
-      this page, not typed in — so they cannot quietly go stale.</p>
-
-    <h3>Six things that were wrong</h3>
-    <ol>
-      <li>
-        <p><b>The map used to carry its own map.</b> About two hundred basemap tiles were
-          baked into the page as base64 text — three megabytes of it — and the map was
-          fenced to exactly the area they covered.</p>
-        <p>The reason was real, and then stopped being real: this page was first built as
-          a Claude Artifact, where a strict security policy blocks every request to another
-          host, so the tiles had to travel inside the file. It then moved to GitHub Pages,
-          where nothing blocks a tile server, and nobody rechecked the assumption for
-          weeks. Live tiles now: the page dropped to a quarter of a megabyte and pans
-          anywhere in the world.</p>
-      </li>
-      <li>
-        <p><b>A restaurant 43 metres from Chinatown station was reported as a 41-minute
-          walk from Farrer Park.</b></p>
-        <p>Nearest-station was being computed against the seven stations drawn on the map.
-          That is correct while every place is in the neighbourhood and silently wrong the
-          moment one is not. The arithmetic was never the bug; the candidate set was. The
-          page now carries the entire network.</p>
-      </li>
-      <li>
-        <p><b>Six ratings appeared to have been typed into the wrong column. None of them
-          had.</b></p>
-        <p>An empty spreadsheet cell that carries formatting is written self-closing —
-          <code>&lt;c r="E5" s="1"/&gt;</code> — with no closing tag of its own. The reader
-          matched only paired tags, so an empty cell ran on and swallowed the value of the
-          cell beside it. Every row with a blank <i>Minus</i> had its rating eaten. Worse
-          than the bug was the helpful fix built on top of it, which moved stray numbers
-          back into place and so made a parser fault look like a human habit — and printed
-          six warnings a build telling the owner to correct a sheet that was already
-          correct.</p>
-      </li>
-      <li>
-        <p><b>On a phone the whole page was laid out 980 pixels wide and shrunk to fit.</b></p>
-        <p>It had shipped without a viewport declaration, because the Artifact host used to
-          supply the surrounding document and Pages supplies nothing. Desktop browsers
-          cannot reproduce it, which is why it survived every screenshot.</p>
-      </li>
-      <li>
-        <p><b>Distance is not time.</b> Four kilometres to Chinatown reads as far away. It
-          is seventeen minutes on the North East line.</p>
-        <p>The column now shows measured travel time and names the mode, because a bare
-          number of minutes is useless if you cannot tell whether you are walking it. One
-          place on this list is quickest by bus.</p>
-      </li>
-      <li>
-        <p><b>Leaflet ships a Ukrainian flag</b> inside its own attribution string. Naming
-          the attribution ourselves keeps the credit and drops the flag.</p>
-      </li>
-    </ol>
-
-    <h3>Things it deliberately does not do</h3>
-    <ul>
-      <li>No analytics, no cookies, no tracking, no fonts phoning home beyond Google&rsquo;s
-        stylesheet. Nothing is recorded about you reading this.</li>
-      <li>The houses are anchors for every measurement on the page, but no postal code or
-        block number appears anywhere in the source — only coordinates. That was a decision,
-        and it is enforced on every build.</li>
-      <li>It never guesses. A place it cannot route keeps a straight-line estimate and says
-        so in italics; a rating in the wrong column reads as unrated rather than being
-        quietly moved.</li>
-    </ul>
-
-    <h3>How it knows it still works</h3>
-    <p>Two entirely separate readers parse the same sheet — Python over the spreadsheet
-      file, JavaScript over the CSV export — and every build compares them column by column.
-      That cross-check is the only reason problem three above was findable at all: the names
-      and addresses lined up perfectly while the values beside them were shifted one place
-      left.</p>
-    <p>A smoke test then runs the built page&rsquo;s own code against a stubbed browser and
-      fails the build if the map never gets a view, the table never gets written, or the
-      <b>Pull from sheet</b> button cannot complete a round trip. Every fix listed above
-      arrived with a test, and every test was checked by putting the bug back and watching
-      it fail.</p>
-  </section>
 
 </div>
 
@@ -1185,7 +1070,7 @@ html{-webkit-text-size-adjust:100%}
   var MRT=[{"code":"NE9","line":"NE","name":"Boon Keng","lat":1.319336,"lng":103.861569},{"code":"DT23","line":"DT","name":"Bendemeer","lat":1.313673,"lng":103.862978},{"code":"DT24","line":"DT","name":"Geylang Bahru","lat":1.321301,"lng":103.871623},{"code":"NE8","line":"NE","name":"Farrer Park","lat":1.311906,"lng":103.853478},{"code":"EW11","line":"EW","name":"Lavender","lat":1.307378,"lng":103.862768},{"code":"EW12","line":"EW","name":"Bugis","lat":1.300402,"lng":103.856199}];            // drawn on the map: the neighbourhood
   var STATIONS=[{"code":"CC1","line":"CC","name":"Dhoby Ghaut","lat":1.298912,"lng":103.846293},{"code":"CC2","line":"CC","name":"Bras Basah","lat":1.296862,"lng":103.850667},{"code":"CC3","line":"CC","name":"Esplanade","lat":1.293658,"lng":103.855081},{"code":"CC4","line":"CC","name":"Promenade","lat":1.293998,"lng":103.86035},{"code":"CC5","line":"CC","name":"Nicoll Highway","lat":1.299767,"lng":103.863637},{"code":"CC6","line":"CC","name":"Stadium","lat":1.302812,"lng":103.875338},{"code":"CC7","line":"CC","name":"Mountbatten","lat":1.306202,"lng":103.882528},{"code":"CC8","line":"CC","name":"Dakota","lat":1.308548,"lng":103.889065},{"code":"CC9","line":"CC","name":"Paya Lebar","lat":1.317247,"lng":103.892261},{"code":"CC10","line":"CC","name":"Macpherson","lat":1.326078,"lng":103.890391},{"code":"CC11","line":"CC","name":"Tai Seng","lat":1.335142,"lng":103.888389},{"code":"CC12","line":"CC","name":"Bartley","lat":1.342501,"lng":103.880178},{"code":"CC13","line":"CC","name":"Serangoon","lat":1.350634,"lng":103.872772},{"code":"CC14","line":"CC","name":"Lorong Chuan","lat":1.351612,"lng":103.864152},{"code":"CC15","line":"CC","name":"Bishan","lat":1.351316,"lng":103.84914},{"code":"CC16","line":"CC","name":"Marymount","lat":1.348707,"lng":103.839423},{"code":"CC17","line":"CC","name":"Caldecott","lat":1.337673,"lng":103.839531},{"code":"CC18","line":"CC","name":"Bukit Brown","lat":1.333729,"lng":103.83069},{"code":"CC19","line":"CC","name":"Botanic Gardens","lat":1.322114,"lng":103.814985},{"code":"CC20","line":"CC","name":"Farrer Road","lat":1.317439,"lng":103.807379},{"code":"CC21","line":"CC","name":"Holland Village","lat":1.31224,"lng":103.796399},{"code":"CC22","line":"CC","name":"Buona Vista","lat":1.306635,"lng":103.790709},{"code":"CC23","line":"CC","name":"One-North","lat":1.29976,"lng":103.787458},{"code":"CC24","line":"CC","name":"Kent Ridge","lat":1.293533,"lng":103.784573},{"code":"CC25","line":"CC","name":"Haw Par Villa","lat":1.282571,"lng":103.781753},{"code":"CC26","line":"CC","name":"Pasir Panjang","lat":1.276214,"lng":103.79135},{"code":"CC27","line":"CC","name":"Labrador Park","lat":1.272254,"lng":103.802632},{"code":"CC28","line":"CC","name":"Telok Blangah","lat":1.270706,"lng":103.809762},{"code":"CC30","line":"CC","name":"Keppel","lat":1.269772,"lng":103.830031},{"code":"CC31","line":"CC","name":"Cantonment","lat":1.272872,"lng":103.837062},{"code":"CC32","line":"CC","name":"Prince Edward Road","lat":1.273157,"lng":103.847097},{"code":"CC33","line":"CC","name":"Marina Bay","lat":1.276251,"lng":103.855447},{"code":"CG1","line":"CG","name":"Expo","lat":1.33455,"lng":103.961548},{"code":"CG2","line":"CG","name":"Changi Airport","lat":1.357479,"lng":103.987884},{"code":"DT1","line":"DT","name":"Bukit Panjang","lat":1.379002,"lng":103.761535},{"code":"DT2","line":"DT","name":"Cashew","lat":1.369815,"lng":103.764439},{"code":"DT3","line":"DT","name":"Hillview","lat":1.362345,"lng":103.767418},{"code":"DT4","line":"DT","name":"Hume","lat":1.354595,"lng":103.769119},{"code":"DT5","line":"DT","name":"Beauty World","lat":1.341223,"lng":103.775794},{"code":"DT6","line":"DT","name":"King Albert Park","lat":1.335662,"lng":103.783399},{"code":"DT7","line":"DT","name":"Sixth Avenue","lat":1.330858,"lng":103.796907},{"code":"DT8","line":"DT","name":"Tan Kah Kee","lat":1.325556,"lng":103.80776},{"code":"DT9","line":"DT","name":"Botanic Gardens","lat":1.322488,"lng":103.816014},{"code":"DT10","line":"DT","name":"Stevens","lat":1.320066,"lng":103.826024},{"code":"DT11","line":"DT","name":"Newton","lat":1.313993,"lng":103.837715},{"code":"DT12","line":"DT","name":"Little India","lat":1.307018,"lng":103.848661},{"code":"DT13","line":"DT","name":"Rochor","lat":1.303852,"lng":103.852769},{"code":"DT14","line":"DT","name":"Bugis","lat":1.299314,"lng":103.857126},{"code":"DT15","line":"DT","name":"Promenade","lat":1.292892,"lng":103.860892},{"code":"DT16","line":"DT","name":"Bayfront","lat":1.281874,"lng":103.85908},{"code":"DT17","line":"DT","name":"Downtown","lat":1.279446,"lng":103.852841},{"code":"DT18","line":"DT","name":"Telok Ayer","lat":1.282069,"lng":103.848649},{"code":"DT19","line":"DT","name":"Chinatown","lat":1.284224,"lng":103.845144},{"code":"DT20","line":"DT","name":"Fort Canning","lat":1.292482,"lng":103.844331},{"code":"DT21","line":"DT","name":"Bencoolen","lat":1.298918,"lng":103.850354},{"code":"DT22","line":"DT","name":"Jalan Besar","lat":1.305171,"lng":103.855296},{"code":"DT23","line":"DT","name":"Bendemeer","lat":1.313673,"lng":103.862978},{"code":"DT24","line":"DT","name":"Geylang Bahru","lat":1.321301,"lng":103.871623},{"code":"DT25","line":"DT","name":"Mattar","lat":1.326877,"lng":103.883248},{"code":"DT26","line":"DT","name":"Macpherson","lat":1.32615,"lng":103.889299},{"code":"DT27","line":"DT","name":"Ubi","lat":1.329974,"lng":103.899227},{"code":"DT28","line":"DT","name":"Kaki Bukit","lat":1.334967,"lng":103.908459},{"code":"DT29","line":"DT","name":"Bedok North","lat":1.334742,"lng":103.917978},{"code":"DT30","line":"DT","name":"Bedok Reservoir","lat":1.336608,"lng":103.932235},{"code":"DT31","line":"DT","name":"Tampines West","lat":1.345515,"lng":103.938437},{"code":"DT32","line":"DT","name":"Tampines","lat":1.35515,"lng":103.94301},{"code":"DT33","line":"DT","name":"Tampines East","lat":1.356191,"lng":103.954634},{"code":"DT34","line":"DT","name":"Upper Changi","lat":1.34174,"lng":103.961473},{"code":"DT35","line":"DT","name":"Expo","lat":1.335383,"lng":103.962375},{"code":"DT36","line":"DT","name":"Xilin","lat":1.328907,"lng":103.964903},{"code":"EW1","line":"EW","name":"Pasir Ris","lat":1.373043,"lng":103.949285},{"code":"EW2","line":"EW","name":"Tampines","lat":1.353302,"lng":103.945145},{"code":"EW3","line":"EW","name":"Simei","lat":1.343197,"lng":103.953377},{"code":"EW4","line":"EW","name":"Tanah Merah","lat":1.327187,"lng":103.946349},{"code":"EW5","line":"EW","name":"Bedok","lat":1.32398,"lng":103.929984},{"code":"EW6","line":"EW","name":"Kembangan","lat":1.321038,"lng":103.912948},{"code":"EW7","line":"EW","name":"Eunos","lat":1.319784,"lng":103.903226},{"code":"EW8","line":"EW","name":"Paya Lebar","lat":1.318111,"lng":103.893061},{"code":"EW9","line":"EW","name":"Aljunied","lat":1.316433,"lng":103.882906},{"code":"EW10","line":"EW","name":"Kallang","lat":1.311489,"lng":103.871387},{"code":"EW11","line":"EW","name":"Lavender","lat":1.307378,"lng":103.862768},{"code":"EW12","line":"EW","name":"Bugis","lat":1.300465,"lng":103.855707},{"code":"EW13","line":"EW","name":"City Hall","lat":1.292937,"lng":103.852586},{"code":"EW14","line":"EW","name":"Raffles Place","lat":1.284126,"lng":103.851462},{"code":"EW15","line":"EW","name":"Tanjong Pagar","lat":1.276561,"lng":103.845725},{"code":"EW16","line":"EW","name":"Outram Park","lat":1.281405,"lng":103.839131},{"code":"EW17","line":"EW","name":"Tiong Bahru","lat":1.286103,"lng":103.827445},{"code":"EW18","line":"EW","name":"Redhill","lat":1.289635,"lng":103.816741},{"code":"EW19","line":"EW","name":"Queenstown","lat":1.294551,"lng":103.806077},{"code":"EW20","line":"EW","name":"Commonwealth","lat":1.302502,"lng":103.798229},{"code":"EW21","line":"EW","name":"Buona Vista","lat":1.307224,"lng":103.790254},{"code":"EW22","line":"EW","name":"Dover","lat":1.311405,"lng":103.778638},{"code":"EW23","line":"EW","name":"Clementi","lat":1.315116,"lng":103.765191},{"code":"EW24","line":"EW","name":"Jurong East","lat":1.333028,"lng":103.74237},{"code":"EW25","line":"EW","name":"Chinese Garden","lat":1.342353,"lng":103.732597},{"code":"EW26","line":"EW","name":"Lakeside","lat":1.344259,"lng":103.720949},{"code":"EW27","line":"EW","name":"Boon Lay","lat":1.338604,"lng":103.706065},{"code":"EW28","line":"EW","name":"Pioneer","lat":1.337587,"lng":103.697322},{"code":"EW29","line":"EW","name":"Joo Koon","lat":1.327717,"lng":103.678375},{"code":"EW30","line":"EW","name":"Gul Circle","lat":1.319471,"lng":103.66053},{"code":"EW31","line":"EW","name":"Tuas Crescent","lat":1.321027,"lng":103.649078},{"code":"EW32","line":"EW","name":"Tuas West Road","lat":1.329985,"lng":103.639617},{"code":"EW33","line":"EW","name":"Tuas Link","lat":1.340882,"lng":103.636991},{"code":"NE1","line":"NE","name":"Harbourfront","lat":1.265389,"lng":103.82153},{"code":"NE3","line":"NE","name":"Outram Park","lat":1.279721,"lng":103.83944},{"code":"NE4","line":"NE","name":"Chinatown","lat":1.28436,"lng":103.843427},{"code":"NE5","line":"NE","name":"Clarke Quay","lat":1.288386,"lng":103.846555},{"code":"NE6","line":"NE","name":"Dhoby Ghaut","lat":1.299705,"lng":103.845489},{"code":"NE7","line":"NE","name":"Little India","lat":1.3068,"lng":103.849647},{"code":"NE8","line":"NE","name":"Farrer Park","lat":1.311906,"lng":103.853478},{"code":"NE9","line":"NE","name":"Boon Keng","lat":1.319336,"lng":103.861569},{"code":"NE10","line":"NE","name":"Potong Pasir","lat":1.331379,"lng":103.869056},{"code":"NE11","line":"NE","name":"Woodleigh","lat":1.33919,"lng":103.870818},{"code":"NE12","line":"NE","name":"Serangoon","lat":1.349708,"lng":103.873575},{"code":"NE13","line":"NE","name":"Kovan","lat":1.360179,"lng":103.885065},{"code":"NE14","line":"NE","name":"Hougang","lat":1.371292,"lng":103.892381},{"code":"NE15","line":"NE","name":"Buangkok","lat":1.38287,"lng":103.893123},{"code":"NE16","line":"NE","name":"Sengkang","lat":1.391695,"lng":103.895485},{"code":"NE17","line":"NE","name":"Punggol","lat":1.404547,"lng":103.902073},{"code":"NE18","line":"NE","name":"Punggol Coast","lat":1.414927,"lng":103.910166},{"code":"NS2","line":"NS","name":"Bukit Batok","lat":1.349033,"lng":103.749566},{"code":"NS3","line":"NS","name":"Bukit Gombak","lat":1.358612,"lng":103.751791},{"code":"NS4","line":"NS","name":"Choa Chu Kang","lat":1.385363,"lng":103.744371},{"code":"NS5","line":"NS","name":"Yew Tee","lat":1.397535,"lng":103.747405},{"code":"NS7","line":"NS","name":"Kranji","lat":1.425087,"lng":103.762137},{"code":"NS8","line":"NS","name":"Marsiling","lat":1.432521,"lng":103.774075},{"code":"NS9","line":"NS","name":"Woodlands","lat":1.43682,"lng":103.786067},{"code":"NS10","line":"NS","name":"Admiralty","lat":1.440589,"lng":103.800991},{"code":"NS11","line":"NS","name":"Sembawang","lat":1.449051,"lng":103.820046},{"code":"NS12","line":"NS","name":"Canberra","lat":1.443077,"lng":103.829703},{"code":"NS13","line":"NS","name":"Yishun","lat":1.429443,"lng":103.835005},{"code":"NS14","line":"NS","name":"Khatib","lat":1.417383,"lng":103.83298},{"code":"NS15","line":"NS","name":"Yio Chu Kang","lat":1.381756,"lng":103.844947},{"code":"NS16","line":"NS","name":"Ang Mo Kio","lat":1.369933,"lng":103.849558},{"code":"NS17","line":"NS","name":"Bishan","lat":1.350839,"lng":103.848144},{"code":"NS18","line":"NS","name":"Braddell","lat":1.340469,"lng":103.846799},{"code":"NS19","line":"NS","name":"Toa Payoh","lat":1.332629,"lng":103.847502},{"code":"NS20","line":"NS","name":"Novena","lat":1.320441,"lng":103.843826},{"code":"NS21","line":"NS","name":"Newton","lat":1.312319,"lng":103.837985},{"code":"NS22","line":"NS","name":"Orchard","lat":1.30398,"lng":103.832245},{"code":"NS23","line":"NS","name":"Somerset","lat":1.300264,"lng":103.839086},{"code":"NS24","line":"NS","name":"Dhoby Ghaut","lat":1.298701,"lng":103.846114},{"code":"NS27","line":"NS","name":"Marina Bay","lat":1.27641,"lng":103.854596},{"code":"NS28","line":"NS","name":"Marina South Pier","lat":1.271027,"lng":103.862448},{"code":"TE1","line":"TE","name":"Woodlands North","lat":1.448292,"lng":103.785693},{"code":"TE2","line":"TE","name":"Woodlands","lat":1.436058,"lng":103.787939},{"code":"TE3","line":"TE","name":"Woodlands South","lat":1.427396,"lng":103.793264},{"code":"TE4","line":"TE","name":"Springleaf","lat":1.397581,"lng":103.817857},{"code":"TE5","line":"TE","name":"Lentor","lat":1.385507,"lng":103.835744},{"code":"TE6","line":"TE","name":"Mayflower","lat":1.371463,"lng":103.836568},{"code":"TE7","line":"TE","name":"Bright Hill","lat":1.363283,"lng":103.832894},{"code":"TE8","line":"TE","name":"Upper Thomson","lat":1.354416,"lng":103.832898},{"code":"TE9","line":"TE","name":"Caldecott","lat":1.337246,"lng":103.840162},{"code":"TE10","line":"TE","name":"Mount Pleasant","lat":1.328565,"lng":103.835189},{"code":"TE11","line":"TE","name":"Stevens","lat":1.319334,"lng":103.825567},{"code":"TE12","line":"TE","name":"Napier","lat":1.306782,"lng":103.818957},{"code":"TE13","line":"TE","name":"Orchard Boulevard","lat":1.302422,"lng":103.823869},{"code":"TE14","line":"TE","name":"Orchard","lat":1.303044,"lng":103.831375},{"code":"TE15","line":"TE","name":"Great World","lat":1.293948,"lng":103.833721},{"code":"TE16","line":"TE","name":"Havelock","lat":1.288505,"lng":103.833586},{"code":"TE17","line":"TE","name":"Outram Park","lat":1.28133,"lng":103.839138},{"code":"TE18","line":"TE","name":"Maxwell","lat":1.280533,"lng":103.843884},{"code":"TE19","line":"TE","name":"Shenton Way","lat":1.277717,"lng":103.850368},{"code":"TE20","line":"TE","name":"Marina Bay","lat":1.274742,"lng":103.855309},{"code":"TE21","line":"TE","name":"Marina South","lat":1.274555,"lng":103.863574},{"code":"TE22","line":"TE","name":"Gardens By The Bay","lat":1.278487,"lng":103.867455},{"code":"TE23","line":"TE","name":"Tanjong Rhu","lat":1.297265,"lng":103.873453},{"code":"TE24","line":"TE","name":"Katong Park","lat":1.297831,"lng":103.886179},{"code":"TE25","line":"TE","name":"Tanjong Katong","lat":1.299319,"lng":103.897369},{"code":"TE26","line":"TE","name":"Marine Parade","lat":1.302612,"lng":103.904983},{"code":"TE27","line":"TE","name":"Marine Terrace","lat":1.306665,"lng":103.915107},{"code":"TE28","line":"TE","name":"Siglap","lat":1.310009,"lng":103.930026},{"code":"TE29","line":"TE","name":"Bayshore","lat":1.313122,"lng":103.94231},{"code":"TE30","line":"TE","name":"Bedok South","lat":1.316684,"lng":103.949311},{"code":"TE31","line":"TE","name":"Sungei Bedok","lat":1.320401,"lng":103.957184}];  // the whole network: who is nearest, really
   var ROUTES={"1.31642,103.86150>1.28077,103.85266":{"pt":{"by":"train","changes":0,"min":21,"via":"DT","walk_m":753},"walk":{"min":62,"walk_m":5140}},"1.31642,103.86150>1.28282,103.84455":{"pt":{"by":"train","changes":0,"min":19,"via":"NE","walk_m":689},"walk":{"min":57,"walk_m":4769}},"1.31642,103.86150>1.28417,103.84377":{"pt":{"by":"train","changes":0,"min":17,"via":"NE","walk_m":547},"walk":{"min":55,"walk_m":4545}},"1.31642,103.86150>1.29327,103.85337":{"pt":{"by":"bus","changes":0,"min":20,"via":"133","walk_m":487},"walk":{"min":40,"walk_m":3356}},"1.31642,103.86150>1.30952,103.85774":{"walk":{"min":12,"walk_m":994}},"1.31642,103.86150>1.30971,103.86433":{"walk":{"min":12,"walk_m":1038}},"1.31642,103.86150>1.31171,103.86011":{"walk":{"min":8,"walk_m":699}},"1.31642,103.86150>1.31190,103.86154":{"walk":{"min":8,"walk_m":681}},"1.31642,103.86150>1.31220,103.86005":{"walk":{"min":7,"walk_m":624}},"1.31642,103.86150>1.31222,103.86282":{"walk":{"min":7,"walk_m":615}},"1.31642,103.86150>1.31239,103.85937":{"walk":{"min":8,"walk_m":638}},"1.31642,103.86150>1.31322,103.86034":{"walk":{"min":6,"walk_m":506}},"1.31642,103.86150>1.31519,103.85976":{"walk":{"min":4,"walk_m":298}},"1.31642,103.86150>1.31612,103.85825":{"walk":{"min":6,"walk_m":510}},"1.31642,103.86150>1.32099,103.87039":{"walk":{"min":16,"walk_m":1348}},"1.31642,103.86150>1.32146,103.87001":{"walk":{"min":17,"walk_m":1389}},"1.31642,103.86150>1.32195,103.86984":{"walk":{"min":16,"walk_m":1357}},"1.32112,103.86679>1.28077,103.85266":{"pt":{"by":"bus + train","changes":1,"min":26,"via":"857 \u2192 DT","walk_m":388},"walk":{"min":72,"walk_m":5966}},"1.32112,103.86679>1.28282,103.84455":{"pt":{"by":"bus + train","changes":2,"min":26,"via":"140 \u2192 985 \u2192 NE","walk_m":533},"walk":{"min":67,"walk_m":5595}},"1.32112,103.86679>1.28417,103.84377":{"pt":{"by":"bus + train","changes":2,"min":24,"via":"140 \u2192 985 \u2192 NE","walk_m":391},"walk":{"min":64,"walk_m":5371}},"1.32112,103.86679>1.29327,103.85337":{"pt":{"by":"bus","changes":0,"min":23,"via":"133","walk_m":461},"walk":{"min":50,"walk_m":4182}},"1.32112,103.86679>1.30952,103.85774":{"pt":{"by":"bus","changes":0,"min":11,"via":"857","walk_m":343},"walk":{"min":22,"walk_m":1820}},"1.32112,103.86679>1.30971,103.86433":{"pt":{"by":"bus","changes":0,"min":11,"via":"133","walk_m":294},"walk":{"min":22,"walk_m":1792}},"1.32112,103.86679>1.31171,103.86011":{"walk":{"min":18,"walk_m":1525}},"1.32112,103.86679>1.31190,103.86154":{"walk":{"min":17,"walk_m":1453}},"1.32112,103.86679>1.31220,103.86005":{"pt":{"by":"bus","changes":0,"min":9,"via":"857","walk_m":287},"walk":{"min":17,"walk_m":1450}},"1.32112,103.86679>1.31222,103.86282":{"walk":{"min":16,"walk_m":1333}},"1.32112,103.86679>1.31239,103.85937":{"pt":{"by":"bus","changes":0,"min":9,"via":"857","walk_m":289},"walk":{"min":18,"walk_m":1464}},"1.32112,103.86679>1.31322,103.86034":{"walk":{"min":16,"walk_m":1332}},"1.32112,103.86679>1.31519,103.85976":{"walk":{"min":15,"walk_m":1256}},"1.32112,103.86679>1.31612,103.85825":{"walk":{"min":17,"walk_m":1423}},"1.32112,103.86679>1.32099,103.87039":{"walk":{"min":6,"walk_m":528}},"1.32112,103.86679>1.32146,103.87001":{"walk":{"min":5,"walk_m":439}},"1.32112,103.86679>1.32195,103.86984":{"walk":{"min":5,"walk_m":407}},"1.32282,103.86918>1.28077,103.85266":{"pt":{"by":"train","changes":0,"min":21,"via":"DT","walk_m":667},"walk":{"min":76,"walk_m":6298}},"1.32282,103.86918>1.28282,103.84455":{"pt":{"by":"train","changes":0,"min":23,"via":"DT","walk_m":908},"walk":{"min":71,"walk_m":5927}},"1.32282,103.86918>1.28417,103.84377":{"pt":{"by":"train","changes":0,"min":19,"via":"DT","walk_m":685},"walk":{"min":70,"walk_m":5791}},"1.32282,103.86918>1.29327,103.85337":{"pt":{"by":"bus + train","changes":1,"min":23,"via":"DT \u2192 77","walk_m":877},"walk":{"min":54,"walk_m":4514}},"1.32282,103.86918>1.30952,103.85774":{"pt":{"by":"bus","changes":0,"min":15,"via":"64","walk_m":495},"walk":{"min":27,"walk_m":2241}},"1.32282,103.86918>1.30971,103.86433":{"pt":{"by":"bus","changes":0,"min":14,"via":"13","walk_m":447},"walk":{"min":24,"walk_m":1997}},"1.32282,103.86918>1.31171,103.86011":{"pt":{"by":"bus","changes":0,"min":14,"via":"64","walk_m":517},"walk":{"min":23,"walk_m":1888}},"1.32282,103.86918>1.31190,103.86154":{"walk":{"min":20,"walk_m":1658}},"1.32282,103.86918>1.31220,103.86005":{"pt":{"by":"bus","changes":0,"min":13,"via":"64","walk_m":439},"walk":{"min":22,"walk_m":1870}},"1.32282,103.86918>1.31222,103.86282":{"walk":{"min":18,"walk_m":1538}},"1.32282,103.86918>1.31239,103.85937":{"pt":{"by":"bus","changes":0,"min":12,"via":"64","walk_m":442},"walk":{"min":23,"walk_m":1884}},"1.32282,103.86918>1.31322,103.86034":{"walk":{"min":21,"walk_m":1752}},"1.32282,103.86918>1.31519,103.85976":{"walk":{"min":20,"walk_m":1676}},"1.32282,103.86918>1.31612,103.85825":{"pt":{"by":"bus","changes":0,"min":18,"via":"64","walk_m":812},"walk":{"min":22,"walk_m":1843}},"1.32282,103.86918>1.32099,103.87039":{"walk":{"min":4,"walk_m":366}},"1.32282,103.86918>1.32146,103.87001":{"walk":{"min":3,"walk_m":263}},"1.32282,103.86918>1.32195,103.86984":{"walk":{"min":3,"walk_m":217}}};      // measured door-to-door times, per home
-  var PLACES=[{"id":"ah-ong-hokkien-mee","name":"Ah Ong Hokkien Mee","short":"Ah Ong Hokkien Mee","cat":"Singapore food","lat":1.32195385488883,"lng":103.869843391813,"addr":"68 Geylang Bahru, #01-3201, Singapore 330068","price":"$","plus":"Generous serving of seafood, strong wok hei flavor","minus":"","rating":4.5,"mrt":"DT24","mrtD":211,"dir":"right","matched":"68 GEYLANG BAHRU GEYLANG BAHRU VILLE SINGAPORE 330068"},{"id":"omnivore-the-sail","name":"Omnivore The Sail","short":"Omnivore The Sail","cat":"Western","lat":1.28076943476846,"lng":103.852658562152,"addr":"2 Marina Blvd, #B1-08, Singapore 018987","price":"$$","plus":"Best salad near MBFC","minus":"","rating":4.5,"mrt":"DT17","mrtD":149,"dir":"left","matched":"2 MARINA BOULEVARD THE SAIL @ MARINA BAY SINGAPORE 018987"},{"id":"oriental-chinese-restaurant","name":"Oriental Chinese Restaurant","short":"Oriental Chinese\u2026","cat":"Chinese food","lat":1.28417074819871,"lng":103.843767432048,"addr":"193, 195, 197 New Bridge Rd, 059425","price":"$$","plus":"Best dumplings, best bubble tea","minus":"","rating":4.5,"mrt":"NE4","mrtD":43,"dir":"left","matched":"195 NEW BRIDGE ROAD SINGAPORE 059425"},{"id":"a-hot-hideout-lavender-aperi","name":"A Hot Hideout @ Lavender (Aperia)","short":"A Hot Hideout","cat":"Chinese food","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Avenue, Mall, #01-58/59 Aperia, 339511","price":"$$","plus":"Cheap mala xiang guo","minus":"Lost wallet here. Watch your belongings","rating":4.0,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"cheng-mun-chee-kee-pig-organ","name":"Cheng Mun Chee Kee Pig Organ Soup","short":"Cheng Mun Chee Kee","cat":"Singapore food","lat":1.31220246285237,"lng":103.860048392522,"addr":"24 Foch Rd, Singapore 209263","price":"$","plus":"Cheap and taste home cooked","minus":"Slightly warm place","rating":4.0,"mrt":"DT23","mrtD":364,"dir":"left","matched":"24 FOCH ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 209263"},{"id":"moustache-bbq","name":"Moustache BBQ \u5927\u80e1\u5b50\u4e32\u70e7","short":"Moustache BBQ \u5927\u80e1\u5b50\u4e32\u70e7","cat":"Chinese food","lat":1.28281824341323,"lng":103.844550727378,"addr":"26 Temple St, Singapore 058571","price":"$$","plus":"Best chuan chuan","minus":"Oily","rating":4.0,"mrt":"DT19","mrtD":170,"dir":"left","matched":"26 TEMPLE STREET KRETA AYER CONSERVATION AREA SINGAPORE 058571"},{"id":"prince-noodles-arc-380","name":"Prince Noodles @ ARC 380","short":"Prince Noodles","cat":"Singapore food","lat":1.3132174360132,"lng":103.860335049351,"addr":"380 Jln Besar, #01-10 ARC 380, Singapore 209000","price":"$","plus":"Best banmian","minus":"Slightly salty","rating":4.0,"mrt":"DT23","mrtD":298,"dir":"left","matched":"380 JALAN BESAR ARC 380 SINGAPORE 209000"},{"id":"sheng-ji-soya-sauce-chicken-","name":"Sheng Ji Soya Sauce Chicken Rice/Noodle \u751f\u8a18\u6cb9\u96de\u98ef \u2022 \u6cb9\u96de\u9eb5","short":"Sheng Ji Soya Sauce\u2026","cat":"Singapore food","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-13, Singapore 330069","price":"$","plus":"Tasty, generous portion","minus":"","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"wooloomooloo-steakhouse","name":"Wooloomooloo Steakhouse","short":"Wooloomooloo Steakhouse","cat":"Western","lat":1.29326862813347,"lng":103.8533651777,"addr":"2 Stamford Rd, Level 3 Swissotel The Stamford, Singapore 178882","price":"$$$","plus":"Good ribeye steak","minus":"","rating":4.0,"mrt":"EW13","mrtD":94,"dir":"left","matched":"2 STAMFORD ROAD SWISSOTEL THE STAMFORD, SINGAPORE SINGAPORE 178882"},{"id":"hui-wei-chilli-ban-mian","name":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli Ban Mian","short":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli\u2026","cat":"Singapore food","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-58, Singapore 330069","price":"$","plus":"Strong Flavors, Spicy","minus":"Prepare to queue for 20 min during peak hours","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"beach-road-scissor-cut-curry","name":"Beach Road Scissor-Cut Curry Rice","short":"Beach Rd Scissor-Cut","cat":"Singapore food","lat":1.30952329692761,"lng":103.85774176901,"addr":"229 Jln Besar, Singapore 208905","price":"$","plus":"Good curry rice. Can ask for extra sauce","minus":"Slightly heavy","rating":3.5,"mrt":"NE8","mrtD":543,"dir":"left","matched":"229 JALAN BESAR SINGAPORE 208905"},{"id":"char","name":"Char","short":"Char","cat":"Singapore food","lat":1.31611634872281,"lng":103.858246886848,"addr":"454 Race Course Rd, Singapore 218697","price":"$$","plus":"Nice. Good wasabi sauce","minus":"Oily charsiew, slightly expensive","rating":3.5,"mrt":"NE9","mrtD":514,"dir":"left","matched":"454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"},{"id":"cheok-kee","name":"Cheok Kee","short":"Cheok Kee","cat":"Singapore food","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-35 Market & Food Centre, Singapore 330069","price":"$","plus":"Meat is nice, chillli is ok","minus":"A bit too wet, too much starchy sauce","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"im-em-thai-kitchen","name":"Im-Em Thai Kitchen","short":"Im-Em Thai Kitchen","cat":"Thai food","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Ave, #01-40, Singapore 339511","price":"$$","plus":"Good pad thai","minus":"Inconsistent at times","rating":3.5,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"ju-xing-hainanese-boneless-c","name":"Ju Xing Hainanese Boneless Chicken Rice \u805a\u5174\u6d77\u5357\u8d77\u9aa8\u9e21\u996d Geylang Bahru","short":"Ju Xing Hainanese\u2026","cat":"Singapore food","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-01 Market & Food Centre, Singapore 330069","price":"$","plus":"Decent chilli and meat.","minus":"Prepare to queue for 10-20 min","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"kitchenman-nasi-lemak","name":"Kitchenman Nasi Lemak","short":"Kitchenman Nasi Lemak","cat":"Singapore food","lat":1.31221743176262,"lng":103.862824192961,"addr":"2 Kallang Ave, #01-08/13 CT HUB, Singapore 339407","price":"$","plus":"Village park style nasi lemak","minus":"1 hr wait","rating":3.5,"mrt":"DT23","mrtD":163,"dir":"right","matched":"2 KALLANG AVENUE CT HUB SINGAPORE 339407"},{"id":"new-udon-mookata","name":"New Udon Mookata","short":"New Udon Mookata","cat":"Thai food","lat":1.31190106395845,"lng":103.861539586844,"addr":"119 Lavender St., Singapore 338731","price":"$$","plus":"Good pork belly","minus":"Stomachache the day after","rating":3.5,"mrt":"DT23","mrtD":254,"dir":"right","matched":"119 LAVENDER STREET SINGAPORE 338731"},{"id":"thumbs-up-restaurant","name":"Thumbs up restaurant \u5927\u62c7\u6307\u7f8e\u98df","short":"Thumbs up restaurant\u2026","cat":"Chinese food","lat":1.3209929422065,"lng":103.870389998344,"addr":"Opposite Geylang Bahru MRT, Singapore 330071","price":"$$","plus":"affordable price, the food mostly solid","minus":"their rice tastes like shit. do not order white rice or fried rice from them. can order bun","rating":3.5,"mrt":"DT24","mrtD":141,"dir":"right","matched":"71 KALLANG BAHRU SINGAPORE 330071"},{"id":"88-hong-kong-roast-meat-spec","name":"88 Hong Kong Roast Meat Specialist","short":"88 Hong Kong Roast Meat","cat":"Singapore food","lat":1.3151925413522,"lng":103.859760427379,"addr":"308 Lavender St., Singapore 338814","price":"$","plus":"Nice","minus":"Oily","rating":3.0,"mrt":"DT23","mrtD":396,"dir":"left","matched":"308 LAVENDER STREET SINGAPORE 338814"},{"id":"moonchild","name":"Moonchild","short":"Moonchild","cat":"Western","lat":1.31238652619302,"lng":103.859366874523,"addr":"351 Jln Besar, #01-01, Singapore 208988","price":"$$","plus":"Good coffee, good mains","minus":"Slightly expensive","rating":3.0,"mrt":"DT23","mrtD":426,"dir":"left","matched":"351 JALAN BESAR RELIANCE BUILDING SINGAPORE 208988"},{"id":"sweet-cheeks","name":"Sweet Cheeks","short":"Sweet Cheeks","cat":"Dessert","lat":1.31171131328582,"lng":103.860112458366,"addr":"147 Tyrwhitt Rd, Singapore 207561","price":"$$","plus":"Good waffle, pistachio ice cream","minus":"","rating":2.5,"mrt":"DT23","mrtD":386,"dir":"left","matched":"147 TYRWHITT ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 207561"}];
+  var PLACES=[{"id":"ah-ong-hokkien-mee","name":"Ah Ong Hokkien Mee","short":"Ah Ong Hokkien Mee","cat":"Singapore food","by":"Bay","lat":1.32195385488883,"lng":103.869843391813,"addr":"68 Geylang Bahru, #01-3201, Singapore 330068","price":"$","plus":"Generous serving of seafood, strong wok hei flavor","minus":"","rating":4.5,"mrt":"DT24","mrtD":211,"dir":"right","matched":"68 GEYLANG BAHRU GEYLANG BAHRU VILLE SINGAPORE 330068"},{"id":"oriental-chinese-restaurant","name":"Oriental Chinese Restaurant","short":"Oriental Chinese\u2026","cat":"Chinese food","by":"Fang","lat":1.28417074819871,"lng":103.843767432048,"addr":"193, 195, 197 New Bridge Rd, 059425","price":"$$","plus":"Best dumplings, best bubble tea","minus":"","rating":4.5,"mrt":"NE4","mrtD":43,"dir":"left","matched":"195 NEW BRIDGE ROAD SINGAPORE 059425"},{"id":"a-hot-hideout-lavender-aperi","name":"A Hot Hideout @ Lavender (Aperia)","short":"A Hot Hideout","cat":"Chinese food","by":"Fang","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Avenue, Mall, #01-58/59 Aperia, 339511","price":"$$","plus":"Mala soup. Charge by weight. If you go all meat it is super worth","minus":"Lost wallet here. Watch your belongings","rating":4.0,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"cheng-mun-chee-kee-pig-organ","name":"Cheng Mun Chee Kee Pig Organ Soup","short":"Cheng Mun Chee Kee","cat":"Singapore food","by":"Fang","lat":1.31220246285237,"lng":103.860048392522,"addr":"24 Foch Rd, Singapore 209263","price":"$","plus":"Cheap, taste home cooked. Try the Pig organ soup + Vinegar pig trotter","minus":"","rating":4.0,"mrt":"DT23","mrtD":364,"dir":"left","matched":"24 FOCH ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 209263"},{"id":"moustache-bbq","name":"Moustache BBQ \u5927\u80e1\u5b50\u4e32\u70e7","short":"Moustache BBQ \u5927\u80e1\u5b50\u4e32\u70e7","cat":"Chinese food","by":"Fang","lat":1.28281824341323,"lng":103.844550727378,"addr":"26 Temple St, Singapore 058571","price":"$$","plus":"Best chuan chuan","minus":"Oily","rating":4.0,"mrt":"DT19","mrtD":170,"dir":"left","matched":"26 TEMPLE STREET KRETA AYER CONSERVATION AREA SINGAPORE 058571"},{"id":"omnivore-the-sail","name":"Omnivore The Sail","short":"Omnivore The Sail","cat":"Western","by":"Fang","lat":1.28076943476846,"lng":103.852658562152,"addr":"2 Marina Blvd, #B1-08, Singapore 018987","price":"$$","plus":"Best salad near MBFC","minus":"","rating":4.0,"mrt":"DT17","mrtD":149,"dir":"left","matched":"2 MARINA BOULEVARD THE SAIL @ MARINA BAY SINGAPORE 018987"},{"id":"prince-noodles-arc-380","name":"Prince Noodles @ ARC 380","short":"Prince Noodles","cat":"Singapore food","by":"Fang","lat":1.3132174360132,"lng":103.860335049351,"addr":"380 Jln Besar, #01-10 ARC 380, Singapore 209000","price":"$","plus":"Soup Banmian and cold chrysanthemum tea combo","minus":"Can be salty","rating":4.0,"mrt":"DT23","mrtD":298,"dir":"left","matched":"380 JALAN BESAR ARC 380 SINGAPORE 209000"},{"id":"sheng-ji-soya-sauce-chicken-","name":"Sheng Ji Soya Sauce Chicken Rice/Noodle \u751f\u8a18\u6cb9\u96de\u98ef \u2022 \u6cb9\u96de\u9eb5","short":"Sheng Ji Soya Sauce\u2026","cat":"Singapore food","by":"Bay","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-13, Singapore 330069","price":"$","plus":"Tasty, generous portion","minus":"","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"wooloomooloo-steakhouse","name":"Wooloomooloo Steakhouse","short":"Wooloomooloo Steakhouse","cat":"Western","by":"Fang","lat":1.29326862813347,"lng":103.8533651777,"addr":"2 Stamford Rd, Level 3 Swissotel The Stamford, Singapore 178882","price":"$$$","plus":"Good ribeye steak","minus":"","rating":4.0,"mrt":"EW13","mrtD":94,"dir":"left","matched":"2 STAMFORD ROAD SWISSOTEL THE STAMFORD, SINGAPORE SINGAPORE 178882"},{"id":"hui-wei-chilli-ban-mian","name":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli Ban Mian","short":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli\u2026","cat":"Singapore food","by":"Bay","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-58, Singapore 330069","price":"$","plus":"Strong Flavors, Spicy","minus":"Prepare to queue for 20 min during peak hours","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"beach-road-scissor-cut-curry","name":"Beach Road Scissor-Cut Curry Rice","short":"Beach Rd Scissor-Cut","cat":"Singapore food","by":"Fang","lat":1.30952329692761,"lng":103.85774176901,"addr":"229 Jln Besar, Singapore 208905","price":"$","plus":"Good curry rice. Can ask for extra sauce","minus":"Slightly heavy","rating":3.5,"mrt":"NE8","mrtD":543,"dir":"left","matched":"229 JALAN BESAR SINGAPORE 208905"},{"id":"char","name":"Char","short":"Char","cat":"Singapore food","by":"Ben","lat":1.31611634872281,"lng":103.858246886848,"addr":"454 Race Course Rd, Singapore 218697","price":"$$","plus":"Nice. Good wasabi sauce","minus":"Fatty cut for Charsiew","rating":3.5,"mrt":"NE9","mrtD":514,"dir":"left","matched":"454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"},{"id":"cheok-kee","name":"Cheok Kee","short":"Cheok Kee","cat":"Singapore food","by":"Bay","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-35 Market & Food Centre, Singapore 330069","price":"$","plus":"Meat is nice, chillli is ok","minus":"A bit too wet, too much starchy sauce","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"im-em-thai-kitchen","name":"Im-Em Thai Kitchen","short":"Im-Em Thai Kitchen","cat":"Thai food","by":"Fang","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Ave, #01-40, Singapore 339511","price":"$$","plus":"Good pad thai","minus":"Inconsistent at times","rating":3.5,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"ju-xing-hainanese-boneless-c","name":"Ju Xing Hainanese Boneless Chicken Rice \u805a\u5174\u6d77\u5357\u8d77\u9aa8\u9e21\u996d Geylang Bahru","short":"Ju Xing Hainanese\u2026","cat":"Singapore food","by":"Bay","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-01 Market & Food Centre, Singapore 330069","price":"$","plus":"Decent chilli and meat.","minus":"Prepare to queue for 10-20 min","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"kitchenman-nasi-lemak","name":"Kitchenman Nasi Lemak","short":"Kitchenman Nasi Lemak","cat":"Singapore food","by":"Fang","lat":1.31221743176262,"lng":103.862824192961,"addr":"2 Kallang Ave, #01-08/13 CT HUB, Singapore 339407","price":"$","plus":"Village park style nasi lemak","minus":"1 hr wait","rating":3.5,"mrt":"DT23","mrtD":163,"dir":"right","matched":"2 KALLANG AVENUE CT HUB SINGAPORE 339407"},{"id":"new-udon-mookata","name":"New Udon Mookata","short":"New Udon Mookata","cat":"Thai food","by":"Fang","lat":1.31190106395845,"lng":103.861539586844,"addr":"119 Lavender St., Singapore 338731","price":"$$","plus":"Good pork belly","minus":"Dont buy the set meal. Not worth it","rating":3.5,"mrt":"DT23","mrtD":254,"dir":"right","matched":"119 LAVENDER STREET SINGAPORE 338731"},{"id":"thumbs-up-restaurant","name":"Thumbs up restaurant \u5927\u62c7\u6307\u7f8e\u98df","short":"Thumbs up restaurant\u2026","cat":"Chinese food","by":"Bay","lat":1.3209929422065,"lng":103.870389998344,"addr":"Opposite Geylang Bahru MRT, Singapore 330071","price":"$$","plus":"affordable price, the food mostly solid","minus":"their rice tastes like shit. do not order white rice or fried rice from them. can order bun","rating":3.5,"mrt":"DT24","mrtD":141,"dir":"right","matched":"71 KALLANG BAHRU SINGAPORE 330071"},{"id":"88-hong-kong-roast-meat-spec","name":"88 Hong Kong Roast Meat Specialist","short":"88 Hong Kong Roast Meat","cat":"Singapore food","by":"Fang","lat":1.3151925413522,"lng":103.859760427379,"addr":"308 Lavender St., Singapore 338814","price":"$","plus":"Nice","minus":"Oily","rating":3.0,"mrt":"DT23","mrtD":396,"dir":"left","matched":"308 LAVENDER STREET SINGAPORE 338814"},{"id":"moonchild","name":"Moonchild","short":"Moonchild","cat":"Western","by":"Fang","lat":1.31238652619302,"lng":103.859366874523,"addr":"351 Jln Besar, #01-01, Singapore 208988","price":"$$","plus":"Good coffee, good mains","minus":"Slightly expensive","rating":3.0,"mrt":"DT23","mrtD":426,"dir":"left","matched":"351 JALAN BESAR RELIANCE BUILDING SINGAPORE 208988"},{"id":"sweet-cheeks","name":"Sweet Cheeks","short":"Sweet Cheeks","cat":"Dessert","by":"Fang","lat":1.31171131328582,"lng":103.860112458366,"addr":"147 Tyrwhitt Rd, Singapore 207561","price":"$$","plus":"Good waffle, pistachio ice cream","minus":"","rating":2.5,"mrt":"DT23","mrtD":386,"dir":"left","matched":"147 TYRWHITT ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 207561"}];
 
   // Any station can be named in the table, so the lookup spans the network.
   // The drawn ones are laid over the top - same records, and it keeps the map
@@ -1344,6 +1229,7 @@ html{-webkit-text-size-adjust:100%}
   var state={home:0, sel:null, cat:null, sortKey:"dist", sortDir:1};
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
+    by:function(a,b){ return (a.p.by||"~").localeCompare(b.p.by||"~") || b.p.rating-a.p.rating; },
     dist:function(a,b){ return tripMin(a)-tripMin(b) || a.d-b.d; },
     mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
     rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
@@ -1425,7 +1311,7 @@ html{-webkit-text-size-adjust:100%}
   function drawEmpty(H){
     gRings.clearLayers(); gLines.clearLayers();
     document.getElementById("rows").innerHTML=
-      '<tr><td colspan="7" class="c-none" style="padding:22px 14px">Nothing in that category.</td></tr>';
+      '<tr><td colspan="8" class="c-none" style="padding:22px 14px">Nothing in that category.</td></tr>';
     document.getElementById("capRing").textContent="no places shown";
   }
 
@@ -1439,38 +1325,6 @@ html{-webkit-text-size-adjust:100%}
     order.sort(function(a,b){ return n[b]-n[a] || a.localeCompare(b); });
     return order.map(function(c){ return {name:c, n:n[c]}; });
   })();
-
-  // Counted from the data actually on the page. A hand-typed "21 places" is
-  // wrong the first time somebody adds one; this cannot be.
-  function drawFacts(){
-    var H=HOMES[state.home], mins=[], routed=0, cats={}, nc=0;
-    PLACES.forEach(function(p){
-      var t=trip(H,p);
-      if(t){ routed++; mins.push(t.min); }
-      var c=p.cat||"?"; if(!(c in cats)){ cats[c]=1; nc++; }
-    });
-    mins.sort(function(a,b){ return a-b; });
-    var quick=mins[0], slow=mins[mins.length-1];
-    var near=mins.filter(function(m){ return m<=15; }).length;
-    var nav=(window.performance&&performance.getEntriesByType)
-            ? (performance.getEntriesByType("navigation")[0]||{}) : {};
-    var kb=nav.encodedBodySize ? Math.round(nav.encodedBodySize/1024) : null;
-    var pairs=0; for(var k in ROUTES) pairs++;
-
-    function cell(v,u,label){
-      return '<div class="fact"><b>'+v+(u?'<small>'+u+'</small>':'')+'</b><span>'+label+'</span></div>';
-    }
-    document.getElementById("facts").innerHTML=
-      cell(PLACES.length,"","places eaten at")+
-      cell(nc,"","categories")+
-      cell(HOMES.length,"","houses to measure from")+
-      cell(STATIONS.length,"","mrt stations aboard")+
-      cell(pairs,"","journeys costed")+
-      (mins.length ? cell(quick,"min","quickest from "+esc(H.name)) : "")+
-      (mins.length ? cell(slow,"min","furthest from "+esc(H.name)) : "")+
-      (mins.length ? cell(Math.round(near/mins.length*100),"%","within 15 minutes") : "")+
-      (kb ? cell(kb,"kb","this whole page") : "");
-  }
 
   function drawChips(){
     var box=document.getElementById("chips");
@@ -1568,7 +1422,8 @@ html{-webkit-text-size-adjust:100%}
       m.setPopupContent(
         '<div class="card">'+
           '<div class="card-head">'+
-            '<p class="card-cat">'+esc(p.cat)+'</p>'+
+            '<p class="card-cat">'+esc(p.cat)+
+              (p.by?' <span class="who">'+esc(p.by)+'</span>':'')+'</p>'+
             '<h3 class="card-name">'+esc(p.name)+'</h3>'+
           '</div>'+
           '<div class="card-grid">'+
@@ -1610,6 +1465,7 @@ html{-webkit-text-size-adjust:100%}
       return '<tr data-place="'+p.id+'" tabindex="0" aria-selected="'+(on?"true":"false")+'">'+
         '<td class="num first"><span class="c-dist">'+tripMin(row)+' min</span>'+tripLine(row)+'</td>'+
         '<td class="c-name">'+esc(p.name)+'<span class="c-cat">'+esc(p.cat)+'</span></td>'+
+        '<td class="by">'+(p.by?'<span class="who">'+esc(p.by)+'</span>':'')+'</td>'+
         '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
         '<td>'+priceBar(p.price)+'</td>'+
         '<td class="c-note">'+noteHTML(p)+'</td>'+
@@ -1627,7 +1483,6 @@ html{-webkit-text-size-adjust:100%}
     });
 
     document.getElementById("thFrom").textContent="From "+H.name;
-    if(document.getElementById("facts").innerHTML) drawFacts();
     document.getElementById("colo").textContent=
       PLACES.length+" places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
     Array.prototype.forEach.call(document.querySelectorAll(".switch button"),function(b){
@@ -1745,7 +1600,8 @@ html{-webkit-text-size-adjust:100%}
   // these are PREFIXES, because the real headers are qualified - "Rating
   // (5 pt system)", "Price band". "Category" replaced "Signature dish
   // tried" in the sheet, so both prefixes are listed and the first present wins.
-  var COLS=[["name of place","name"],["category","cat"],["signature dish","cat"],["plus","plus"],
+  var COLS=[["name of place","name"],["category","cat"],["signature dish","cat"],
+            ["recommended by","by"],["plus","plus"],
             ["minus","minus"],["rating","rating"],["price","price"],
             ["link / address","addr"],["address","addr"]];
 
@@ -1775,7 +1631,7 @@ html{-webkit-text-size-adjust:100%}
     for(var r=head+1;r<rows.length;r++){
       var line=rows[r];
       var cell=function(f){ var x=col[f]; return x===undefined?"":(line[x]||"").trim(); };
-      var rec={name:cell("name"), cat:cell("cat"), plus:cell("plus"),
+      var rec={name:cell("name"), cat:cell("cat"), by:cell("by"), plus:cell("plus"),
                minus:cell("minus"), addr:cell("addr"), price:cell("price"),
                rating:cell("rating")};
       if(!rec.name||!rec.addr) continue;
@@ -1829,11 +1685,11 @@ html{-webkit-text-size-adjust:100%}
       var old=byAddr[rec.addr];
       if(old){
         delete byAddr[rec.addr];
-        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.cat].join("");
-        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.cat].join("");
+        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.cat,old.by].join("");
+        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.cat,rec.by].join("");
         if(was!==now) changed++;
         old.name=rec.name; old.rating=rec.rating; old.price=rec.price;
-        old.plus=rec.plus; old.minus=rec.minus; old.cat=rec.cat;
+        old.plus=rec.plus; old.minus=rec.minus; old.cat=rec.cat; old.by=rec.by;
         old.short=shortName(rec.name);
         kept.push(old);
       } else {
@@ -1934,7 +1790,6 @@ html{-webkit-text-size-adjust:100%}
   syncZoomClass();
   drawChips();
   draw();
-  drawFacts();
   }catch(err){
     // A blank map and an empty table are indistinguishable from "no data".
     // Say what happened instead, so a bad refresh is obvious.
@@ -1944,7 +1799,7 @@ html{-webkit-text-size-adjust:100%}
       'color:var(--ink-2);padding:24px;line-height:1.6">This map failed to draw: '+
       String(err&&err.message||err)+'<br>Re-run <b>./update.sh</b> and check the output.</p>';
     var rows=document.getElementById("rows");
-    if(rows) rows.innerHTML='<tr><td colspan="7" style="font-family:var(--mono);'+
+    if(rows) rows.innerHTML='<tr><td colspan="8" style="font-family:var(--mono);'+
       'font-size:12px;color:var(--ink-2)">No rows: '+String(err&&err.message||err)+'</td></tr>';
   }
 })();
