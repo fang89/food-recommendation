@@ -16,7 +16,9 @@ What it copes with, because the sheet has done all of it already:
   * a rating typed into the Minus column instead of the Rating column
   * a place whose postal code and street name geocode to different points
 """
-import argparse, io, json, math, os, re, sys, time
+import argparse
+import csv
+import html as html_mod, io, json, math, os, re, sys, time
 import urllib.error, urllib.parse, urllib.request, zipfile
 
 ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,7 +73,7 @@ def read_sheets(blob):
                         val = shared[int(val)]
                 else:
                     continue
-                val = val.strip()
+                val = html_mod.unescape(val).strip()
                 if val:
                     cells[ref] = val
             if cells:
@@ -107,16 +109,25 @@ def parse_places(rows, warnings):
             continue
 
         # A rating typed into the Minus column: 0-5 numeric there, Rating empty.
-        if not rec.get("rating") and rec.get("minus"):
-            try:
-                probe = float(rec["minus"])
-            except ValueError:
-                probe = None
-            if probe is not None and 0 <= probe <= 5:
-                rec["rating"] = rec.pop("minus")
-                warnings.append('%s: rating "%s" was in the Minus column, not Rating '
-                                "- moved it. Fix the sheet to silence this."
-                                % (rec["name"], rec["rating"]))
+        # Ratings get typed into the wrong column, and not always by one place:
+        # one row has it in Minus, another has slipped two columns into Plus.
+        # A prose field holding nothing but a bare 0-5 number is a rating.
+        if not rec.get("rating"):
+            for field, column in (("minus", "Minus"), ("plus", "Plus"),
+                                  ("dish", "Signature dish")):
+                text = rec.get(field, "").strip()
+                if not text:
+                    continue
+                try:
+                    probe = float(text)
+                except ValueError:
+                    continue
+                if 0 <= probe <= 5:
+                    rec["rating"] = rec.pop(field)
+                    warnings.append('%s: rating "%s" was in the %s column, not Rating '
+                                    "- moved it. Fix the sheet to silence this."
+                                    % (rec["name"], rec["rating"], column))
+                    break
         try:
             rec["rating"] = round(float(rec.get("rating", 0)), 1)
         except ValueError:
@@ -231,6 +242,63 @@ def haversine(a, b):
     return 2 * R * math.asin(math.sqrt(h))
 
 
+
+def csv_crosscheck(cfg, places, warnings):
+    """Compare what we read from the .xlsx with what the page's own pull reads.
+
+    The published page re-reads this sheet in the browser, over
+    /export?format=csv, with a second parser. If the two disagree about a name
+    or an address, every pull will report places as new-and-removed forever and
+    re-geocode them. Cheap to check here; invisible otherwise.
+    """
+    url = ("https://docs.google.com/spreadsheets/d/%s/export?format=csv&gid=%s"
+           % (cfg["sheet_id"], cfg["sheet_gid"]))
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "food-recommendation refresh"})
+        text = urllib.request.urlopen(req, timeout=60).read().decode("utf-8")
+        rows = list(csv.reader(io.StringIO(text)))
+    except Exception as exc:
+        warnings.append("Could not cross-check against the CSV export (%s). "
+                        "The page's own pull may disagree with this build." % exc)
+        return
+
+    head = next((i for i, r in enumerate(rows)
+                 if any(c.strip().lower() == "name of place" for c in r)), None)
+    if head is None:
+        warnings.append('The CSV export has no "Name of place" row, so the '
+                        "page's Pull from sheet button cannot work.")
+        return
+
+    col = {}
+    for idx, cell in enumerate(rows[head]):
+        low = cell.strip().lower()
+        for prefix, field in COLUMNS:
+            if low.startswith(prefix):
+                col.setdefault(field, idx)
+                break
+    if "name" not in col or "addr" not in col:
+        warnings.append("The CSV export is missing a name or address column, so "
+                        "the page's Pull from sheet button cannot work.")
+        return
+
+    seen = set()
+    for row in rows[head + 1:]:
+        get = lambda f: (row[col[f]].strip() if col.get(f, -1) < len(row) else "")
+        if get("name") and get("addr"):
+            seen.add((get("name"), get("addr")))
+
+    ours = {(p["name"], p["addr"]) for p in places}
+    only_here = ours - seen
+    only_csv  = seen - ours
+    for name, addr in sorted(only_here):
+        warnings.append("%s: this build reads the address as %r, the CSV the page "
+                        "pulls does not - the page will treat it as a new place "
+                        "on every pull." % (name, addr))
+    for name, addr in sorted(only_csv):
+        if name not in {n for n, _ in ours}:
+            warnings.append("%s (%s): in the CSV but not in this build." % (name, addr))
+
+
 # ------------------------------------------------------------------ main ----
 
 def main():
@@ -273,6 +341,8 @@ def main():
     for key in [k for k in cache if re.fullmatch(r"\d{6}", k)]:
         del cache[key]
     json.dump(cache, open(GEOCACHE, "w"), indent=1, sort_keys=True)
+
+    csv_crosscheck(cfg, places, warnings)
 
     places = [p for p in places if "lat" in p]
     homes  = [h for h in homes if "lat" in h]

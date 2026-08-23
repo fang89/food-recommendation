@@ -630,7 +630,7 @@ tbody tr:last-child td{border-bottom:none}
   // warning that the map underneath is blank until somebody rebuilds.
 
   var CSV_URL="https://docs.google.com/spreadsheets/d/"+CFG.sheet_id+
-              "/gviz/tq?tqx=out:csv&gid="+CFG.sheet_gid;
+              "/export?format=csv&gid="+CFG.sheet_gid;
 
   function parseCSV(text){
     var rows=[], row=[], field="", q=false, i=0;
@@ -650,7 +650,9 @@ tbody tr:last-child td{border-bottom:none}
     return rows.filter(function(r){ return r.some(function(v){ return v.trim(); }); });
   }
 
-  // Same column rules as build/refresh.py, so a pull and a rebuild agree.
+  // Same column rules as build/refresh.py, so a pull and a rebuild agree:
+  // these are PREFIXES, because the real headers are qualified - "Rating
+  // (5 pt system)", "Price band", "Signature dish tried".
   var COLS=[["name of place","name"],["signature dish","dish"],["plus","plus"],
             ["minus","minus"],["rating","rating"],["price","price"],
             ["link / address","addr"],["address","addr"]];
@@ -668,7 +670,10 @@ tbody tr:last-child td{border-bottom:none}
     rows[head].forEach(function(h,idx){
       var key=h.trim().toLowerCase();
       for(var k=0;k<COLS.length;k++){
-        if(key===COLS[k][0] && col[COLS[k][1]]===undefined){ col[COLS[k][1]]=idx; return; }
+        if(key.indexOf(COLS[k][0])===0){
+          if(col[COLS[k][1]]===undefined) col[COLS[k][1]]=idx;
+          return;                                   // first prefix wins, as in refresh.py
+        }
       }
     });
     if(col.name===undefined||col.addr===undefined)
@@ -683,10 +688,17 @@ tbody tr:last-child td{border-bottom:none}
                rating:cell("rating")};
       if(!rec.name||!rec.addr) continue;
 
-      // The sheet keeps putting the rating one column to the left. Recover it.
-      if(!rec.rating && /^\d+(\.\d+)?$/.test(rec.minus)){
-        var probe=parseFloat(rec.minus);
-        if(probe>=0&&probe<=5){ rec.rating=rec.minus; rec.minus=""; }
+      // Ratings get typed into the wrong column, and not always by one place:
+      // one row has it in Minus, another has slipped two columns into Plus.
+      // Same recovery as build/refresh.py, in the same order.
+      if(!rec.rating){
+        var slots=["minus","plus","dish"];
+        for(var t=0;t<slots.length;t++){
+          var text=(rec[slots[t]]||"").trim();
+          if(!/^\d+(\.\d+)?$/.test(text)) continue;
+          var probe=parseFloat(text);
+          if(probe>=0&&probe<=5){ rec.rating=text; rec[slots[t]]=""; break; }
+        }
       }
       var n=parseFloat(rec.rating);
       rec.rating=isNaN(n)?0:Math.round(n*10)/10;

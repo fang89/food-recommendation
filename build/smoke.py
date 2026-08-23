@@ -138,17 +138,25 @@ SP.prototype["catch"]=function(bad){ return this.then(null,bad); };
 var Promise=SP;
 
 var SHEET_CSV=[
-  "House postal code,,,,",
-  "Name of place,Signature dish,Plus,Minus,Rating,Price,Link / Address",
-  "Smoke Cafe,toast,\"bright, cheap\",queue,4.5,$,\"1 Test Rd, Singapore 209263\"",
-  "Rating Slipped,noodles,good,4.0,,$$,\"2 Test Rd, Singapore 338731\"",
-  "\"Comma, Inc\",rice,,,3.0,$,\"3 Test Rd, Singapore 208905\""
+  ",,,,,,,,",
+  ",Food places,,,,,,,",
+  ",,,,,,,,",
+  ",Name of place,Signature dish tried,Plus,Minus,Rating (5 pt system),Price band,Link / Address,Other comments",
+  ",Smoke Cafe,toast,\"bright, cheap\",queue,4.5,$,\"1 Test Rd, Singapore 209263\",",
+  ",Rating Slipped,noodles,good,4.0,,$$,\"2 Test Rd, Singapore 338731\",",
+  ",\"Comma, Inc\",rice,,,3.0,$,\"3 Test Rd, Singapore 208905\",",
+  ",Slipped Twice,curry,3.5,,,$,\"4 Test Rd, Singapore 207561\","
 ].join("\n");
 
 var __fetched=[];
 function fetch(url){
   __fetched.push(url);
   if(url.indexOf("docs.google.com")>=0){
+    if(url.indexOf("export?format=csv")<0)
+      return SP.reject(new Error(
+        "SHEET_CSV is a capture of /export?format=csv, but the page asked for "+
+        url+" - gviz folds the title row into the header and blanks the Rating "+
+        "header, so this fixture would not represent what it returns"));
     note("fetch:sheet");
     return SP.resolve({ok:true, status:200, text:function(){ return SP.resolve(SHEET_CSV); }});
   }
@@ -182,8 +190,30 @@ if(__calls["html:rows"] <= built)
 var said = __els["pullnote"]._html;
 if(/Could not pull/.test(said))
   throw new Error("Pull from sheet failed: " + said);
-if(!/3 new/.test(said))
+if(!/4 new/.test(said))
   throw new Error("Pull from sheet misread the CSV, it reported: " + said);
+
+// Row-count alone hides a column-mapping bug: a header the parser cannot match
+// yields rows with every rating 0 and every price "$", and still counts them.
+var pulled={}; PLACES.forEach(function(p){ pulled[p.name]=p; });
+if(!pulled["Smoke Cafe"] || pulled["Smoke Cafe"].rating!==4.5)
+  throw new Error("the Rating column was not read - Smoke Cafe came back as " +
+                  (pulled["Smoke Cafe"] && pulled["Smoke Cafe"].rating));
+if(!pulled["Comma, Inc"] || pulled["Comma, Inc"].price!=="$")
+  throw new Error("the Price column was not read - quoted-comma row came back as " +
+                  (pulled["Comma, Inc"] && pulled["Comma, Inc"].price));
+if(pulled["Smoke Cafe"].dish!=="toast")
+  throw new Error("the Signature dish column was not read");
+if(pulled["Smoke Cafe"].plus!=="bright, cheap")
+  throw new Error("a quoted comma broke the CSV parser");
+// Ratings that slipped left must be recovered - one column, and two.
+if(!pulled["Rating Slipped"] || pulled["Rating Slipped"].rating!==4)
+  throw new Error("a rating left in the Minus column was not recovered");
+if(!pulled["Slipped Twice"] || pulled["Slipped Twice"].rating!==3.5)
+  throw new Error("a rating left in the Plus column was not recovered - got " +
+                  (pulled["Slipped Twice"] && pulled["Slipped Twice"].rating));
+if(pulled["Slipped Twice"].plus!=="")
+  throw new Error("a rating recovered from Plus was left behind in Plus as well");
 
 "ok " + __calls["circleMarker"] + " markers, " + __calls["circle"] + " rings, pull ok";
 """
@@ -197,6 +227,12 @@ def main():
     start = html.rindex("<script>\n(function(){")
     body = html[start:].split("<script>", 1)[1]
     body = body[:body.rindex("</script>")]
+
+    # Unwrap the page's IIFE so its variables land at the top level of the test
+    # file. The checks can then read PLACES and friends directly, instead of the
+    # page having to carry a test hook it does not otherwise need.
+    head, tail = body.index("(function(){") + len("(function(){"), body.rindex("})();")
+    body = body[head:tail]
 
     cmd, kind = engine()
     # osascript reports the script's last expression; node has to be told to
