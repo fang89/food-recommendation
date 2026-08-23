@@ -1,0 +1,56 @@
+name: Refresh from sheet
+
+# Rebuilds the page from the Google Sheet and commits the result, so the live
+# site can be updated without a terminal:
+#
+#   github.com/fang89/food-recommendation -> Actions -> Refresh from sheet
+#   -> Run workflow
+#
+# It does the full job the browser's "Pull from sheet" button cannot: it
+# re-geocodes, recomputes the bounding box, and re-cuts the basemap tiles when
+# a new place falls outside the current one.
+
+on:
+  workflow_dispatch:          # the "Run workflow" button
+  schedule:
+    - cron: "0 20 * * 0"      # Mondays 04:00 Singapore, in case nobody presses it
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: python -m pip install --quiet pillow
+
+      - name: Pull the sheet and rebuild
+        run: |
+          python3 build/refresh.py
+          python3 build/build.py
+
+      - name: Smoke test the built page
+        run: python3 build/smoke.py
+
+      - name: Commit if anything moved
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- index.html data build/geocache.json; then
+            echo "Sheet has not changed since the last build."
+            exit 0
+          fi
+          git add index.html data build/geocache.json
+          git commit -m "Refresh from sheet"
+          git push

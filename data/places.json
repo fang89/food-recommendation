@@ -1,5 +1,22 @@
 [
  {
+  "id": "ah-ong-hokkien-mee",
+  "name": "Ah Ong Hokkien Mee",
+  "short": "Ah Ong Hokkien Mee",
+  "dish": "Hokkien Mee",
+  "lat": 1.32195385488883,
+  "lng": 103.869843391813,
+  "addr": "68 Geylang Bahru, #01-3201, Singapore 330068",
+  "price": "$",
+  "plus": "Generous serving of seafood, strong wok hei flavor",
+  "minus": "",
+  "rating": 4.5,
+  "mrt": "DT24",
+  "mrtD": 211,
+  "dir": "right",
+  "matched": "68 GEYLANG BAHRU GEYLANG BAHRU VILLE SINGAPORE 330068"
+ },
+ {
   "id": "cheng-mun-chee-kee-pig-organ",
   "name": "Cheng Mun Chee Kee Pig Organ Soup",
   "short": "Cheng Mun Chee Kee",
@@ -30,7 +47,7 @@
   "rating": 4.0,
   "mrt": "DT23",
   "mrtD": 163,
-  "dir": "right",
+  "dir": "left",
   "matched": "2 KALLANG AVENUE CT HUB SINGAPORE 339407"
  },
  {
@@ -47,7 +64,7 @@
   "rating": 4.0,
   "mrt": "DT23",
   "mrtD": 254,
-  "dir": "right",
+  "dir": "left",
   "matched": "119 LAVENDER STREET SINGAPORE 338731"
  },
  {
@@ -66,6 +83,40 @@
   "mrtD": 298,
   "dir": "left",
   "matched": "380 JALAN BESAR ARC 380 SINGAPORE 209000"
+ },
+ {
+  "id": "sheng-ji-soya-sauce-chicken-",
+  "name": "Sheng Ji Soya Sauce Chicken Rice/Noodle 生記油雞飯 • 油雞麵",
+  "short": "Sheng Ji Soya Sauce…",
+  "dish": "Soya Sauce Chicken Rice",
+  "lat": 1.32146311046779,
+  "lng": 103.870005014547,
+  "addr": "69 Geylang Bahru, #01-13, Singapore 330069",
+  "price": "$",
+  "plus": "Tasty, generous portion",
+  "minus": "",
+  "rating": 4.0,
+  "mrt": "DT24",
+  "mrtD": 181,
+  "dir": "right",
+  "matched": "69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"
+ },
+ {
+  "id": "hui-wei-chilli-ban-mian",
+  "name": "回味辣椒板面 Hui Wei Chilli Ban Mian",
+  "short": "回味辣椒板面 Hui Wei Chilli…",
+  "dish": "Chilli Panmee",
+  "lat": 1.32146311046779,
+  "lng": 103.870005014547,
+  "addr": "69 Geylang Bahru, #01-58, Singapore 330069",
+  "price": "$",
+  "plus": "Strong Flavors, Spicy",
+  "minus": "Prepare to queue for 20 min during peak hours",
+  "rating": 4.0,
+  "mrt": "DT24",
+  "mrtD": 181,
+  "dir": "right",
+  "matched": "69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"
  },
  {
   "id": "beach-road-scissor-cut-curry",
@@ -102,6 +153,23 @@
   "matched": "454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"
  },
  {
+  "id": "cheok-kee",
+  "name": "Cheok Kee",
+  "short": "Cheok Kee",
+  "dish": "Duck Rice",
+  "lat": 1.32146311046779,
+  "lng": 103.870005014547,
+  "addr": "69 Geylang Bahru, #01-35 Market &amp; Food Centre, Singapore 330069",
+  "price": "$",
+  "plus": "Meat is nice, chillli is ok",
+  "minus": "A bit too wet, too much starchy sauce",
+  "rating": 3.5,
+  "mrt": "DT24",
+  "mrtD": 181,
+  "dir": "right",
+  "matched": "69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"
+ },
+ {
   "id": "im-em-thai-kitchen",
   "name": "Im-Em Thai Kitchen",
   "short": "Im-Em Thai Kitchen",
@@ -117,6 +185,40 @@
   "mrtD": 312,
   "dir": "right",
   "matched": "12 KALLANG AVENUE APERIA SINGAPORE 339511"
+ },
+ {
+  "id": "ju-xing-hainanese-boneless-c",
+  "name": "Ju Xing Hainanese Boneless Chicken Rice 聚兴海南起骨鸡饭 Geylang Bahru",
+  "short": "Ju Xing Hainanese…",
+  "dish": "",
+  "lat": 1.32146311046779,
+  "lng": 103.870005014547,
+  "addr": "69 Geylang Bahru, #01-01 Market &amp; Food Centre, Singapore 330069",
+  "price": "$",
+  "plus": "Decent chilli and meat.",
+  "minus": "Prepare to queue for 10-20 min",
+  "rating": 3.5,
+  "mrt": "DT24",
+  "mrtD": 181,
+  "dir": "right",
+  "matched": "69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"
+ },
+ {
+  "id": "thumbs-up-restaurant",
+  "name": "Thumbs up restaurant 大拇指美食",
+  "short": "Thumbs up restaurant…",
+  "dish": "Mala Xiangguo, 蒜苔炒肉, 烤串, 炸酱面",
+  "lat": 1.3209929422065,
+  "lng": 103.870389998344,
+  "addr": "Opposite Geylang Bahru MRT, Singapore 330071",
+  "price": "$$",
+  "plus": "affordable price, the food mostly solid",
+  "minus": "their rice tastes like shit. do not order white rice or fried rice from them. can order bun",
+  "rating": 3.5,
+  "mrt": "DT24",
+  "mrtD": 141,
+  "dir": "right",
+  "matched": "71 KALLANG BAHRU SINGAPORE 330071"
  },
  {
   "id": "88-hong-kong-roast-meat-spec",

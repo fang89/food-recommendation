@@ -166,9 +166,14 @@ def onemap(query, tries=4):
     return {"found": 0, "results": []}
 
 
-def geocode(address, cache, warnings, force=False):
-    """Resolve twice - by postal code and by street - and compare the two."""
-    if not force and address in cache:
+def geocode(address, cache, warnings, force=False, private=False):
+    """Resolve twice - by postal code and by street - and compare the two.
+
+    private=True keeps the query and its match out of the shared cache.
+    build/geocache.json is committed to a public repo, so a home postal code
+    written there would publish the very thing the page takes care to hide.
+    """
+    if not force and not private and address in cache:
         return cache[address]
 
     postal = re.search(r"\b(\d{6})\b", address)
@@ -201,7 +206,8 @@ def geocode(address, cache, warnings, force=False):
 
     entry = {"lat": float(chosen["LATITUDE"]), "lng": float(chosen["LONGITUDE"]),
              "matched": chosen["ADDRESS"]}
-    cache[address] = entry
+    if not private:
+        cache[address] = entry
     return entry
 
 
@@ -258,10 +264,14 @@ def main():
         if hit:
             rec.update(lat=hit["lat"], lng=hit["lng"], matched=hit["matched"])
     for home in homes:
-        hit = geocode(home.pop("postal"), cache, warnings, args.force)
+        hit = geocode(home.pop("postal"), cache, warnings, args.force, private=True)
         if hit:
             home.update(lat=hit["lat"], lng=hit["lng"])
             home.pop("matched", None)
+    # Belt and braces: drop any bare postal-code key an older build cached
+    # before home lookups were made private. Place keys are full addresses.
+    for key in [k for k in cache if re.fullmatch(r"\d{6}", k)]:
+        del cache[key]
     json.dump(cache, open(GEOCACHE, "w"), indent=1, sort_keys=True)
 
     places = [p for p in places if "lat" in p]

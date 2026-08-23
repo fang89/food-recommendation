@@ -77,7 +77,12 @@ def main():
     css = css.replace("url(images/", "url(data:,#")   # default marker icons are unused
     js = open(os.path.join(ROOT, "vendor", "leaflet.js")).read()
 
-    runtime = {"bbox": cfg["bbox"], "walk": cfg.get("walk_speed_m_per_min", 80)}
+    # Only what the page needs at runtime. The sheet id and the FOOD tab's gid
+    # go in so the published page can re-read the sheet itself; the postal-code
+    # tab is never named here, so a browser pull can never reach it.
+    runtime = {"bbox": cfg["bbox"], "walk": cfg.get("walk_speed_m_per_min", 80),
+               "sheet_id": cfg["sheet_id"], "sheet_gid": cfg["sheet_gid"],
+               "short_names": cfg.get("short_names", {})}
     subs = {
         "/*__LEAFLET_CSS__*/": css,
         "/*__LEAFLET_JS__*/":  js,

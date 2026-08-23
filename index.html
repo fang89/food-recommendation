@@ -718,6 +718,21 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .addlink:active{transform:translateY(0)}
 .addlink:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 .cta-copy{flex:1 1 22ch; min-width:0; font-family:var(--body); font-size:16.5px; line-height:1.45; color:var(--ink-2)}
+.cta-copy b.inl{display:inline; font-family:var(--mono); font-size:12.5px; font-weight:600;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); margin:0}
+.pull{font-family:var(--mono); font-size:12.5px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent-ink); background:transparent; cursor:pointer;
+  border:1.5px solid var(--accent); border-radius:3px; padding:12px 18px; white-space:nowrap;
+  flex:0 0 auto; transition:background .15s, color .15s, transform .15s}
+.pull:hover:not(:disabled){background:var(--accent); color:var(--on-accent); transform:translateY(-1px)}
+.pull:active:not(:disabled){transform:translateY(0)}
+.pull:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+.pull:disabled{opacity:.55; cursor:progress}
+.pullnote{margin:9px 2px 0; min-height:1.2em; font-family:var(--mono); font-size:12.5px;
+  line-height:1.65; color:var(--ink-3)}
+.pullnote:empty{margin:0; min-height:0}
+.pullnote b{color:var(--ink-2); font-weight:600}
+.pullnote .bad{color:var(--accent-ink)}
 .cta-copy b{display:block; font-family:var(--display); font-weight:700; font-size:17.5px;
   letter-spacing:-.012em; color:var(--ink); margin-bottom:2px}
 
@@ -883,8 +898,10 @@ tbody tr:last-child td{border-bottom:none}
     <h1>Food recommendation</h1>
     <div class="cta">
       <a class="addlink" href="https://docs.google.com/spreadsheets/d/1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q/edit?gid=1534632431#gid=1534632431" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
-      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — and it lands on this map at the next refresh.</p>
+      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — then press <b class="inl">Pull from sheet</b> to see it here straight away.</p>
+      <button class="pull" id="pull" type="button">Pull from sheet &#8635;</button>
     </div>
+    <p class="pullnote" id="pullnote" role="status" aria-live="polite"></p>
   </header>
 
   <section>
@@ -954,10 +971,10 @@ tbody tr:last-child td{border-bottom:none}
   "use strict";
   try{
   var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-  var CFG={"bbox":{"lat0":1.30618,"lat1":1.32402,"lng0":103.85228,"lng1":103.87282},"walk":80};
+  var CFG={"bbox":{"lat0":1.30618,"lat1":1.32402,"lng0":103.85228,"lng1":103.87282},"walk":80,"sheet_id":"1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q","sheet_gid":"1534632431","short_names":{"Cheng Mun Chee Kee Pig Organ Soup":"Cheng Mun Chee Kee","Beach Road Scissor-Cut Curry Rice":"Beach Rd Scissor-Cut","88 Hong Kong Roast Meat Specialist":"88 Hong Kong Roast Meat"}};
   var HOMES=[{"name":"Boon Keng","lat":1.31642489627751,"lng":103.861501638313,"dir":"right"},{"name":"Bay hse","lat":1.32282118210161,"lng":103.869177870562,"dir":"left"}];
   var MRT=[{"code":"NE9","line":"NE","name":"Boon Keng","lat":1.319336,"lng":103.861569},{"code":"DT23","line":"DT","name":"Bendemeer","lat":1.313673,"lng":103.862978},{"code":"DT24","line":"DT","name":"Geylang Bahru","lat":1.321301,"lng":103.871623},{"code":"NE8","line":"NE","name":"Farrer Park","lat":1.311906,"lng":103.853478},{"code":"EW11","line":"EW","name":"Lavender","lat":1.307378,"lng":103.862768}];
-  var PLACES=[{"id":"cheng-mun-chee-kee-pig-organ","name":"Cheng Mun Chee Kee Pig Organ Soup","short":"Cheng Mun Chee Kee","dish":"Pig organ soup","lat":1.31220246285237,"lng":103.860048392522,"addr":"24 Foch Rd, Singapore 209263","price":"$","plus":"Cheap and taste home cooked","minus":"Slightly warm place","rating":4.0,"mrt":"DT23","mrtD":364,"dir":"left","matched":"24 FOCH ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 209263"},{"id":"kitchenman-nasi-lemak","name":"Kitchenman Nasi Lemak","short":"Kitchenman Nasi Lemak","dish":"Nasi lemak","lat":1.31221743176262,"lng":103.862824192961,"addr":"2 Kallang Ave, #01-08/13 CT HUB, Singapore 339407","price":"$","plus":"Village park style nasi lemak","minus":"1 hr wait","rating":4.0,"mrt":"DT23","mrtD":163,"dir":"right","matched":"2 KALLANG AVENUE CT HUB SINGAPORE 339407"},{"id":"new-udon-mookata","name":"New Udon Mookata","short":"New Udon Mookata","dish":"Mookata","lat":1.31190106395845,"lng":103.861539586844,"addr":"119 Lavender St., Singapore 338731","price":"$$","plus":"Good pork belly","minus":"Stomachache the day after","rating":4.0,"mrt":"DT23","mrtD":254,"dir":"right","matched":"119 LAVENDER STREET SINGAPORE 338731"},{"id":"prince-noodles-arc-380","name":"Prince Noodles @ ARC 380","short":"Prince Noodles","dish":"Ban mian","lat":1.3132174360132,"lng":103.860335049351,"addr":"380 Jln Besar, #01-10 ARC 380, Singapore 209000","price":"$","plus":"Best banmian","minus":"Slightly salty","rating":4.0,"mrt":"DT23","mrtD":298,"dir":"left","matched":"380 JALAN BESAR ARC 380 SINGAPORE 209000"},{"id":"beach-road-scissor-cut-curry","name":"Beach Road Scissor-Cut Curry Rice","short":"Beach Rd Scissor-Cut","dish":"Curry rice","lat":1.30952329692761,"lng":103.85774176901,"addr":"229 Jln Besar, Singapore 208905","price":"$","plus":"","minus":"","rating":3.5,"mrt":"NE8","mrtD":543,"dir":"left","matched":"229 JALAN BESAR SINGAPORE 208905"},{"id":"char","name":"Char","short":"Char","dish":"Char siew","lat":1.31611634872281,"lng":103.858246886848,"addr":"454 Race Course Rd, Singapore 218697","price":"$$","plus":"Nice. Good wasabi sauce","minus":"Oily charsiew, slightly expensive","rating":3.5,"mrt":"NE9","mrtD":514,"dir":"left","matched":"454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"},{"id":"im-em-thai-kitchen","name":"Im-Em Thai Kitchen","short":"Im-Em Thai Kitchen","dish":"Pad Thai","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Ave, #01-40, Singapore 339511","price":"$$","plus":"Good pad thai","minus":"Inconsistent at times","rating":3.5,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"88-hong-kong-roast-meat-spec","name":"88 Hong Kong Roast Meat Specialist","short":"88 Hong Kong Roast Meat","dish":"Char siew, Sio ba","lat":1.3151925413522,"lng":103.859760427379,"addr":"308 Lavender St., Singapore 338814","price":"$","plus":"Nice","minus":"Oily","rating":3.0,"mrt":"DT23","mrtD":396,"dir":"left","matched":"308 LAVENDER STREET SINGAPORE 338814"},{"id":"moonchild","name":"Moonchild","short":"Moonchild","dish":"Cold brew coffee","lat":1.31238652619302,"lng":103.859366874523,"addr":"351 Jln Besar, #01-01, Singapore 208988","price":"$$","plus":"Good coffee, good mains","minus":"Slightly expensive","rating":3.0,"mrt":"DT23","mrtD":426,"dir":"left","matched":"351 JALAN BESAR RELIANCE BUILDING SINGAPORE 208988"},{"id":"sweet-cheeks","name":"Sweet Cheeks","short":"Sweet Cheeks","dish":"Ice cream","lat":1.31171131328582,"lng":103.860112458366,"addr":"147 Tyrwhitt Rd, Singapore 207561","price":"$$","plus":"Good waffle, pistachio ice cream","minus":"","rating":2.5,"mrt":"DT23","mrtD":386,"dir":"left","matched":"147 TYRWHITT ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 207561"}];
+  var PLACES=[{"id":"ah-ong-hokkien-mee","name":"Ah Ong Hokkien Mee","short":"Ah Ong Hokkien Mee","dish":"Hokkien Mee","lat":1.32195385488883,"lng":103.869843391813,"addr":"68 Geylang Bahru, #01-3201, Singapore 330068","price":"$","plus":"Generous serving of seafood, strong wok hei flavor","minus":"","rating":4.5,"mrt":"DT24","mrtD":211,"dir":"right","matched":"68 GEYLANG BAHRU GEYLANG BAHRU VILLE SINGAPORE 330068"},{"id":"cheng-mun-chee-kee-pig-organ","name":"Cheng Mun Chee Kee Pig Organ Soup","short":"Cheng Mun Chee Kee","dish":"Pig organ soup","lat":1.31220246285237,"lng":103.860048392522,"addr":"24 Foch Rd, Singapore 209263","price":"$","plus":"Cheap and taste home cooked","minus":"Slightly warm place","rating":4.0,"mrt":"DT23","mrtD":364,"dir":"left","matched":"24 FOCH ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 209263"},{"id":"kitchenman-nasi-lemak","name":"Kitchenman Nasi Lemak","short":"Kitchenman Nasi Lemak","dish":"Nasi lemak","lat":1.31221743176262,"lng":103.862824192961,"addr":"2 Kallang Ave, #01-08/13 CT HUB, Singapore 339407","price":"$","plus":"Village park style nasi lemak","minus":"1 hr wait","rating":4.0,"mrt":"DT23","mrtD":163,"dir":"left","matched":"2 KALLANG AVENUE CT HUB SINGAPORE 339407"},{"id":"new-udon-mookata","name":"New Udon Mookata","short":"New Udon Mookata","dish":"Mookata","lat":1.31190106395845,"lng":103.861539586844,"addr":"119 Lavender St., Singapore 338731","price":"$$","plus":"Good pork belly","minus":"Stomachache the day after","rating":4.0,"mrt":"DT23","mrtD":254,"dir":"left","matched":"119 LAVENDER STREET SINGAPORE 338731"},{"id":"prince-noodles-arc-380","name":"Prince Noodles @ ARC 380","short":"Prince Noodles","dish":"Ban mian","lat":1.3132174360132,"lng":103.860335049351,"addr":"380 Jln Besar, #01-10 ARC 380, Singapore 209000","price":"$","plus":"Best banmian","minus":"Slightly salty","rating":4.0,"mrt":"DT23","mrtD":298,"dir":"left","matched":"380 JALAN BESAR ARC 380 SINGAPORE 209000"},{"id":"sheng-ji-soya-sauce-chicken-","name":"Sheng Ji Soya Sauce Chicken Rice/Noodle \u751f\u8a18\u6cb9\u96de\u98ef \u2022 \u6cb9\u96de\u9eb5","short":"Sheng Ji Soya Sauce\u2026","dish":"Soya Sauce Chicken Rice","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-13, Singapore 330069","price":"$","plus":"Tasty, generous portion","minus":"","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"hui-wei-chilli-ban-mian","name":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli Ban Mian","short":"\u56de\u5473\u8fa3\u6912\u677f\u9762 Hui Wei Chilli\u2026","dish":"Chilli Panmee","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-58, Singapore 330069","price":"$","plus":"Strong Flavors, Spicy","minus":"Prepare to queue for 20 min during peak hours","rating":4.0,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"beach-road-scissor-cut-curry","name":"Beach Road Scissor-Cut Curry Rice","short":"Beach Rd Scissor-Cut","dish":"Curry rice","lat":1.30952329692761,"lng":103.85774176901,"addr":"229 Jln Besar, Singapore 208905","price":"$","plus":"","minus":"","rating":3.5,"mrt":"NE8","mrtD":543,"dir":"left","matched":"229 JALAN BESAR SINGAPORE 208905"},{"id":"char","name":"Char","short":"Char","dish":"Char siew","lat":1.31611634872281,"lng":103.858246886848,"addr":"454 Race Course Rd, Singapore 218697","price":"$$","plus":"Nice. Good wasabi sauce","minus":"Oily charsiew, slightly expensive","rating":3.5,"mrt":"NE9","mrtD":514,"dir":"left","matched":"454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"},{"id":"cheok-kee","name":"Cheok Kee","short":"Cheok Kee","dish":"Duck Rice","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-35 Market &amp; Food Centre, Singapore 330069","price":"$","plus":"Meat is nice, chillli is ok","minus":"A bit too wet, too much starchy sauce","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"im-em-thai-kitchen","name":"Im-Em Thai Kitchen","short":"Im-Em Thai Kitchen","dish":"Pad Thai","lat":1.3097112065077,"lng":103.864326436447,"addr":"12 Kallang Ave, #01-40, Singapore 339511","price":"$$","plus":"Good pad thai","minus":"Inconsistent at times","rating":3.5,"mrt":"EW11","mrtD":312,"dir":"right","matched":"12 KALLANG AVENUE APERIA SINGAPORE 339511"},{"id":"ju-xing-hainanese-boneless-c","name":"Ju Xing Hainanese Boneless Chicken Rice \u805a\u5174\u6d77\u5357\u8d77\u9aa8\u9e21\u996d Geylang Bahru","short":"Ju Xing Hainanese\u2026","dish":"","lat":1.32146311046779,"lng":103.870005014547,"addr":"69 Geylang Bahru, #01-01 Market &amp; Food Centre, Singapore 330069","price":"$","plus":"Decent chilli and meat.","minus":"Prepare to queue for 10-20 min","rating":3.5,"mrt":"DT24","mrtD":181,"dir":"right","matched":"69 GEYLANG BAHRU GEYLANG BAHRU MARKET AND FOOD CENTRE SINGAPORE 330069"},{"id":"thumbs-up-restaurant","name":"Thumbs up restaurant \u5927\u62c7\u6307\u7f8e\u98df","short":"Thumbs up restaurant\u2026","dish":"Mala Xiangguo, \u849c\u82d4\u7092\u8089, \u70e4\u4e32, \u70b8\u9171\u9762","lat":1.3209929422065,"lng":103.870389998344,"addr":"Opposite Geylang Bahru MRT, Singapore 330071","price":"$$","plus":"affordable price, the food mostly solid","minus":"their rice tastes like shit. do not order white rice or fried rice from them. can order bun","rating":3.5,"mrt":"DT24","mrtD":141,"dir":"right","matched":"71 KALLANG BAHRU SINGAPORE 330071"},{"id":"88-hong-kong-roast-meat-spec","name":"88 Hong Kong Roast Meat Specialist","short":"88 Hong Kong Roast Meat","dish":"Char siew, Sio ba","lat":1.3151925413522,"lng":103.859760427379,"addr":"308 Lavender St., Singapore 338814","price":"$","plus":"Nice","minus":"Oily","rating":3.0,"mrt":"DT23","mrtD":396,"dir":"left","matched":"308 LAVENDER STREET SINGAPORE 338814"},{"id":"moonchild","name":"Moonchild","short":"Moonchild","dish":"Cold brew coffee","lat":1.31238652619302,"lng":103.859366874523,"addr":"351 Jln Besar, #01-01, Singapore 208988","price":"$$","plus":"Good coffee, good mains","minus":"Slightly expensive","rating":3.0,"mrt":"DT23","mrtD":426,"dir":"left","matched":"351 JALAN BESAR RELIANCE BUILDING SINGAPORE 208988"},{"id":"sweet-cheeks","name":"Sweet Cheeks","short":"Sweet Cheeks","dish":"Ice cream","lat":1.31171131328582,"lng":103.860112458366,"addr":"147 Tyrwhitt Rd, Singapore 207561","price":"$$","plus":"Good waffle, pistachio ice cream","minus":"","rating":2.5,"mrt":"DT23","mrtD":386,"dir":"left","matched":"147 TYRWHITT ROAD PETAIN ROAD/TYRWHITT ROAD CONSERVATION AREA SINGAPORE 207561"}];
 
   var BOUNDS=L.latLngBounds([CFG.bbox.lat0,CFG.bbox.lng0],[CFG.bbox.lat1,CFG.bbox.lng1]);
   var BY_CODE={}; MRT.forEach(function(s){ BY_CODE[s.code]=s; });
@@ -1048,7 +1065,7 @@ tbody tr:last-child td{border-bottom:none}
   // Each place is three stacked circles: a fat invisible hit target that owns all
   // the interaction, a faint target ring, and the dot itself. The ring and dot are
   // non-interactive, so pointer events fall through to the 20px hit target below.
-  PLACES.forEach(function(p){
+  function addMarker(p){
     var hit=L.circleMarker([p.lat,p.lng],{radius:20, stroke:false, fill:true, fillOpacity:0.001, className:"hit"}).addTo(map);
     var ring=L.circleMarker([p.lat,p.lng],{radius:14, fill:false, weight:1.5, opacity:.32, color:css("--accent"), interactive:false}).addTo(map);
     var dot=L.circleMarker([p.lat,p.lng],{radius:8, weight:2.5, color:css("--sheet"), fillColor:css("--accent"), fillOpacity:1, interactive:false}).addTo(map);
@@ -1067,7 +1084,9 @@ tbody tr:last-child td{border-bottom:none}
       el.dataset.place=p.id;
     }
     placeMarkers[p.id]=hit;
-  });
+    return hit;
+  }
+  PLACES.forEach(addMarker);
 
   // clicking the permanent label picks the place too — it doubles the target
   map.getContainer().addEventListener("click",function(e){
@@ -1259,6 +1278,218 @@ tbody tr:last-child td{border-bottom:none}
     var pk=e.target.closest("[data-place]");
     if(pk){ e.preventDefault(); select(pk.dataset.place); }
   });
+
+
+  // ------------------------------------------------------- pull from sheet ---
+  // The published page can re-read the sheet itself. Google serves the CSV
+  // export with an Access-Control-Allow-Origin header for this site's origin,
+  // and OneMap's search endpoint allows any origin, so both the rows and the
+  // geocoding for a newly added address can be done in the browser.
+  //
+  // It reads the FOOD tab only, never the tab holding the postal codes. Those
+  // are resolved to coordinates at build time and deliberately never reach the
+  // published page; fetching that tab here would put them in the network log
+  // of a public site.
+  //
+  // What a pull cannot do is re-cut the basemap. Tiles are baked in over a
+  // fixed box, so a new place outside it gets its row and its pin plus a
+  // warning that the map underneath is blank until somebody rebuilds.
+
+  var CSV_URL="https://docs.google.com/spreadsheets/d/"+CFG.sheet_id+
+              "/gviz/tq?tqx=out:csv&gid="+CFG.sheet_gid;
+
+  function parseCSV(text){
+    var rows=[], row=[], field="", q=false, i=0;
+    for(;i<text.length;i++){
+      var c=text.charAt(i);
+      if(q){
+        if(c==='"'){ if(text.charAt(i+1)==='"'){ field+='"'; i++; } else q=false; }
+        else field+=c;
+      } else if(c==='"'){ q=true; }
+      else if(c===","){ row.push(field); field=""; }
+      else if(c==="\n"||c==="\r"){
+        if(c==="\r"&&text.charAt(i+1)==="\n") i++;
+        row.push(field); rows.push(row); row=[]; field="";
+      } else field+=c;
+    }
+    if(field||row.length){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(v){ return v.trim(); }); });
+  }
+
+  // Same column rules as build/refresh.py, so a pull and a rebuild agree.
+  var COLS=[["name of place","name"],["signature dish","dish"],["plus","plus"],
+            ["minus","minus"],["rating","rating"],["price","price"],
+            ["link / address","addr"],["address","addr"]];
+
+  function readSheet(text){
+    var rows=parseCSV(text), head=-1;
+    for(var i=0;i<rows.length&&head<0;i++){
+      for(var j=0;j<rows[i].length;j++){
+        if(rows[i][j].trim().toLowerCase()==="name of place"){ head=i; break; }
+      }
+    }
+    if(head<0) throw new Error('the sheet has no "Name of place" header row');
+
+    var col={};
+    rows[head].forEach(function(h,idx){
+      var key=h.trim().toLowerCase();
+      for(var k=0;k<COLS.length;k++){
+        if(key===COLS[k][0] && col[COLS[k][1]]===undefined){ col[COLS[k][1]]=idx; return; }
+      }
+    });
+    if(col.name===undefined||col.addr===undefined)
+      throw new Error("the sheet is missing its name or address column");
+
+    var out=[];
+    for(var r=head+1;r<rows.length;r++){
+      var line=rows[r];
+      var cell=function(f){ var x=col[f]; return x===undefined?"":(line[x]||"").trim(); };
+      var rec={name:cell("name"), dish:cell("dish"), plus:cell("plus"),
+               minus:cell("minus"), addr:cell("addr"), price:cell("price"),
+               rating:cell("rating")};
+      if(!rec.name||!rec.addr) continue;
+
+      // The sheet keeps putting the rating one column to the left. Recover it.
+      if(!rec.rating && /^\d+(\.\d+)?$/.test(rec.minus)){
+        var probe=parseFloat(rec.minus);
+        if(probe>=0&&probe<=5){ rec.rating=rec.minus; rec.minus=""; }
+      }
+      var n=parseFloat(rec.rating);
+      rec.rating=isNaN(n)?0:Math.round(n*10)/10;
+      rec.price=(rec.price.replace(/[^$]/g,"")||"$").slice(0,3);
+      out.push(rec);
+    }
+    return out;
+  }
+
+  function geocodeOne(addr){
+    var postal=addr.match(/\b\d{6}\b/);
+    var q=postal?postal[0]:addr.replace(/#\S+/,"").split(",")[0].trim();
+    return fetch("https://www.onemap.gov.sg/api/common/elastic/search?searchVal="+
+                 encodeURIComponent(q)+"&returnGeom=Y&getAddrDetails=Y&pageNum=1")
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var hit=j.results&&j.results[0];
+        return hit ? {lat:parseFloat(hit.LATITUDE), lng:parseFloat(hit.LONGITUDE)} : null;
+      })
+      .catch(function(){ return null; });
+  }
+
+  function shortName(name){
+    var stem=name.split(/\s+@\s+/)[0].trim();
+    if((CFG.short_names||{})[name]) return CFG.short_names[name];
+    if(stem.length<=24) return stem;
+    var cut=stem.slice(0,24).replace(/\s+\S*$/,"").replace(/[,;\-]+$/,"");
+    return (cut||stem.slice(0,24))+"…";
+  }
+
+  function nearestStation(pt){
+    var best=MRT[0], bd=Infinity;
+    MRT.forEach(function(s){ var d=dist(pt,s); if(d<bd){ bd=d; best=s; } });
+    return {mrt:best, mrtD:Math.round(bd)};
+  }
+
+  var pullNote=document.getElementById("pullnote");
+  var pullBtn=document.getElementById("pull");
+  function say(html,bad){ pullNote.innerHTML=bad?'<span class="bad">'+html+'</span>':html; }
+
+  function applySheet(sheet){
+    var byAddr={}; PLACES.forEach(function(p){ byAddr[p.addr]=p; });
+    var kept=[], fresh=[], changed=0, outside=[];
+
+    sheet.forEach(function(rec){
+      var old=byAddr[rec.addr];
+      if(old){
+        delete byAddr[rec.addr];
+        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.dish].join("");
+        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.dish].join("");
+        if(was!==now) changed++;
+        old.name=rec.name; old.rating=rec.rating; old.price=rec.price;
+        old.plus=rec.plus; old.minus=rec.minus; old.dish=rec.dish;
+        old.short=shortName(rec.name);
+        kept.push(old);
+      } else {
+        fresh.push(rec);
+      }
+    });
+    var gone=Object.keys(byAddr).length;
+
+    // One address at a time: OneMap rate-limits a burst of parallel queries.
+    var added=[], failed=[];
+    var chain=fresh.reduce(function(prev,rec){
+      return prev.then(function(){
+        say("Reading the sheet… locating <b>"+esc(rec.name)+"</b>");
+        return geocodeOne(rec.addr).then(function(hit){
+          if(!hit){ failed.push(rec.name); return; }
+          rec.lat=hit.lat; rec.lng=hit.lng;
+          rec.id="new"+added.length+"-"+Math.round(hit.lat*1e5)+"-"+Math.round(hit.lng*1e5);
+          rec.short=shortName(rec.name);
+          var near=nearestStation(rec);
+          rec.mrt=near.mrt; rec.mrtD=near.mrtD;
+          rec.mrtW=Math.max(1,Math.round(near.mrtD/CFG.walk));
+          rec.dir=rec.lng>=(CFG.bbox.lng0+CFG.bbox.lng1)/2?"right":"left";
+          if(!BOUNDS.contains([rec.lat,rec.lng])) outside.push(rec.name);
+          added.push(rec);
+        });
+      });
+    }, Promise.resolve());
+
+    return chain.then(function(){
+      if(!kept.length&&!added.length)
+        throw new Error("the sheet came back with no usable rows");
+
+      PLACES.length=0;
+      kept.concat(added).forEach(function(p){ PLACES.push(p); });
+
+      Object.keys(placeMarkers).forEach(function(id){
+        if(!PLACES.some(function(p){ return p.id===id; })){
+          var m=placeMarkers[id];
+          map.removeLayer(m); map.removeLayer(m._ring); map.removeLayer(m._dot);
+          delete placeMarkers[id];
+        }
+      });
+      added.forEach(addMarker);
+      if(state.sel&&!placeMarkers[state.sel]) state.sel=null;
+      draw();
+
+      var bits=[];
+      if(added.length) bits.push("<b>"+added.length+" new</b>");
+      if(changed)      bits.push("<b>"+changed+" updated</b>");
+      if(gone)         bits.push("<b>"+gone+" removed</b>");
+      var msg = bits.length
+        ? "Pulled "+bits.join(", ")+" — "+PLACES.length+" places now."
+        : "Already up to date — "+PLACES.length+" places.";
+      if(failed.length)
+        msg+=' <span class="bad">OneMap could not place '+esc(failed.join(", "))+
+             ". Check the address in the sheet.</span>";
+      if(outside.length)
+        msg+=' <span class="bad">'+esc(outside.join(", "))+
+             " sits outside the drawn area, so the map under that pin is blank"+
+             " until the page is rebuilt.</span>";
+      if(bits.length)
+        msg+=" This view only — run <b>./update.sh</b>, or the"+
+             " <b>Refresh from sheet</b> action on GitHub, to make it stick.";
+      say(msg);
+    });
+  }
+
+  function pull(){
+    pullBtn.disabled=true; say("Reading the sheet…");
+    fetch(CSV_URL,{cache:"no-store"})
+      .then(function(r){
+        if(!r.ok) throw new Error("the sheet would not load (HTTP "+r.status+
+          "). Check it is still shared with anyone who has the link.");
+        return r.text();
+      })
+      .then(function(text){ return applySheet(readSheet(text)); })
+      .catch(function(err){
+        say("Could not pull: "+esc(err.message||String(err))+
+            ". The page is still showing the last build.", true);
+      })
+      .then(function(){ pullBtn.disabled=false; });
+  }
+
+  if(pullBtn) pullBtn.addEventListener("click",pull);
 
   var mq=window.matchMedia("(prefers-color-scheme: dark)");
   (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(function(){ setTiles(); draw(); });

@@ -57,6 +57,21 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .addlink:active{transform:translateY(0)}
 .addlink:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 .cta-copy{flex:1 1 22ch; min-width:0; font-family:var(--body); font-size:16.5px; line-height:1.45; color:var(--ink-2)}
+.cta-copy b.inl{display:inline; font-family:var(--mono); font-size:12.5px; font-weight:600;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); margin:0}
+.pull{font-family:var(--mono); font-size:12.5px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent-ink); background:transparent; cursor:pointer;
+  border:1.5px solid var(--accent); border-radius:3px; padding:12px 18px; white-space:nowrap;
+  flex:0 0 auto; transition:background .15s, color .15s, transform .15s}
+.pull:hover:not(:disabled){background:var(--accent); color:var(--on-accent); transform:translateY(-1px)}
+.pull:active:not(:disabled){transform:translateY(0)}
+.pull:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+.pull:disabled{opacity:.55; cursor:progress}
+.pullnote{margin:9px 2px 0; min-height:1.2em; font-family:var(--mono); font-size:12.5px;
+  line-height:1.65; color:var(--ink-3)}
+.pullnote:empty{margin:0; min-height:0}
+.pullnote b{color:var(--ink-2); font-weight:600}
+.pullnote .bad{color:var(--accent-ink)}
 .cta-copy b{display:block; font-family:var(--display); font-weight:700; font-size:17.5px;
   letter-spacing:-.012em; color:var(--ink); margin-bottom:2px}
 
@@ -222,8 +237,10 @@ tbody tr:last-child td{border-bottom:none}
     <h1>Food recommendation</h1>
     <div class="cta">
       <a class="addlink" href="__SHEET_URL__" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
-      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — and it lands on this map at the next refresh.</p>
+      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — then press <b class="inl">Pull from sheet</b> to see it here straight away.</p>
+      <button class="pull" id="pull" type="button">Pull from sheet &#8635;</button>
     </div>
+    <p class="pullnote" id="pullnote" role="status" aria-live="polite"></p>
   </header>
 
   <section>
@@ -382,7 +399,7 @@ tbody tr:last-child td{border-bottom:none}
   // Each place is three stacked circles: a fat invisible hit target that owns all
   // the interaction, a faint target ring, and the dot itself. The ring and dot are
   // non-interactive, so pointer events fall through to the 20px hit target below.
-  PLACES.forEach(function(p){
+  function addMarker(p){
     var hit=L.circleMarker([p.lat,p.lng],{radius:20, stroke:false, fill:true, fillOpacity:0.001, className:"hit"}).addTo(map);
     var ring=L.circleMarker([p.lat,p.lng],{radius:14, fill:false, weight:1.5, opacity:.32, color:css("--accent"), interactive:false}).addTo(map);
     var dot=L.circleMarker([p.lat,p.lng],{radius:8, weight:2.5, color:css("--sheet"), fillColor:css("--accent"), fillOpacity:1, interactive:false}).addTo(map);
@@ -401,7 +418,9 @@ tbody tr:last-child td{border-bottom:none}
       el.dataset.place=p.id;
     }
     placeMarkers[p.id]=hit;
-  });
+    return hit;
+  }
+  PLACES.forEach(addMarker);
 
   // clicking the permanent label picks the place too — it doubles the target
   map.getContainer().addEventListener("click",function(e){
@@ -593,6 +612,218 @@ tbody tr:last-child td{border-bottom:none}
     var pk=e.target.closest("[data-place]");
     if(pk){ e.preventDefault(); select(pk.dataset.place); }
   });
+
+
+  // ------------------------------------------------------- pull from sheet ---
+  // The published page can re-read the sheet itself. Google serves the CSV
+  // export with an Access-Control-Allow-Origin header for this site's origin,
+  // and OneMap's search endpoint allows any origin, so both the rows and the
+  // geocoding for a newly added address can be done in the browser.
+  //
+  // It reads the FOOD tab only, never the tab holding the postal codes. Those
+  // are resolved to coordinates at build time and deliberately never reach the
+  // published page; fetching that tab here would put them in the network log
+  // of a public site.
+  //
+  // What a pull cannot do is re-cut the basemap. Tiles are baked in over a
+  // fixed box, so a new place outside it gets its row and its pin plus a
+  // warning that the map underneath is blank until somebody rebuilds.
+
+  var CSV_URL="https://docs.google.com/spreadsheets/d/"+CFG.sheet_id+
+              "/gviz/tq?tqx=out:csv&gid="+CFG.sheet_gid;
+
+  function parseCSV(text){
+    var rows=[], row=[], field="", q=false, i=0;
+    for(;i<text.length;i++){
+      var c=text.charAt(i);
+      if(q){
+        if(c==='"'){ if(text.charAt(i+1)==='"'){ field+='"'; i++; } else q=false; }
+        else field+=c;
+      } else if(c==='"'){ q=true; }
+      else if(c===","){ row.push(field); field=""; }
+      else if(c==="\n"||c==="\r"){
+        if(c==="\r"&&text.charAt(i+1)==="\n") i++;
+        row.push(field); rows.push(row); row=[]; field="";
+      } else field+=c;
+    }
+    if(field||row.length){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(v){ return v.trim(); }); });
+  }
+
+  // Same column rules as build/refresh.py, so a pull and a rebuild agree.
+  var COLS=[["name of place","name"],["signature dish","dish"],["plus","plus"],
+            ["minus","minus"],["rating","rating"],["price","price"],
+            ["link / address","addr"],["address","addr"]];
+
+  function readSheet(text){
+    var rows=parseCSV(text), head=-1;
+    for(var i=0;i<rows.length&&head<0;i++){
+      for(var j=0;j<rows[i].length;j++){
+        if(rows[i][j].trim().toLowerCase()==="name of place"){ head=i; break; }
+      }
+    }
+    if(head<0) throw new Error('the sheet has no "Name of place" header row');
+
+    var col={};
+    rows[head].forEach(function(h,idx){
+      var key=h.trim().toLowerCase();
+      for(var k=0;k<COLS.length;k++){
+        if(key===COLS[k][0] && col[COLS[k][1]]===undefined){ col[COLS[k][1]]=idx; return; }
+      }
+    });
+    if(col.name===undefined||col.addr===undefined)
+      throw new Error("the sheet is missing its name or address column");
+
+    var out=[];
+    for(var r=head+1;r<rows.length;r++){
+      var line=rows[r];
+      var cell=function(f){ var x=col[f]; return x===undefined?"":(line[x]||"").trim(); };
+      var rec={name:cell("name"), dish:cell("dish"), plus:cell("plus"),
+               minus:cell("minus"), addr:cell("addr"), price:cell("price"),
+               rating:cell("rating")};
+      if(!rec.name||!rec.addr) continue;
+
+      // The sheet keeps putting the rating one column to the left. Recover it.
+      if(!rec.rating && /^\d+(\.\d+)?$/.test(rec.minus)){
+        var probe=parseFloat(rec.minus);
+        if(probe>=0&&probe<=5){ rec.rating=rec.minus; rec.minus=""; }
+      }
+      var n=parseFloat(rec.rating);
+      rec.rating=isNaN(n)?0:Math.round(n*10)/10;
+      rec.price=(rec.price.replace(/[^$]/g,"")||"$").slice(0,3);
+      out.push(rec);
+    }
+    return out;
+  }
+
+  function geocodeOne(addr){
+    var postal=addr.match(/\b\d{6}\b/);
+    var q=postal?postal[0]:addr.replace(/#\S+/,"").split(",")[0].trim();
+    return fetch("https://www.onemap.gov.sg/api/common/elastic/search?searchVal="+
+                 encodeURIComponent(q)+"&returnGeom=Y&getAddrDetails=Y&pageNum=1")
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var hit=j.results&&j.results[0];
+        return hit ? {lat:parseFloat(hit.LATITUDE), lng:parseFloat(hit.LONGITUDE)} : null;
+      })
+      .catch(function(){ return null; });
+  }
+
+  function shortName(name){
+    var stem=name.split(/\s+@\s+/)[0].trim();
+    if((CFG.short_names||{})[name]) return CFG.short_names[name];
+    if(stem.length<=24) return stem;
+    var cut=stem.slice(0,24).replace(/\s+\S*$/,"").replace(/[,;\-]+$/,"");
+    return (cut||stem.slice(0,24))+"…";
+  }
+
+  function nearestStation(pt){
+    var best=MRT[0], bd=Infinity;
+    MRT.forEach(function(s){ var d=dist(pt,s); if(d<bd){ bd=d; best=s; } });
+    return {mrt:best, mrtD:Math.round(bd)};
+  }
+
+  var pullNote=document.getElementById("pullnote");
+  var pullBtn=document.getElementById("pull");
+  function say(html,bad){ pullNote.innerHTML=bad?'<span class="bad">'+html+'</span>':html; }
+
+  function applySheet(sheet){
+    var byAddr={}; PLACES.forEach(function(p){ byAddr[p.addr]=p; });
+    var kept=[], fresh=[], changed=0, outside=[];
+
+    sheet.forEach(function(rec){
+      var old=byAddr[rec.addr];
+      if(old){
+        delete byAddr[rec.addr];
+        var was=[old.name,old.rating,old.price,old.plus,old.minus,old.dish].join("");
+        var now=[rec.name,rec.rating,rec.price,rec.plus,rec.minus,rec.dish].join("");
+        if(was!==now) changed++;
+        old.name=rec.name; old.rating=rec.rating; old.price=rec.price;
+        old.plus=rec.plus; old.minus=rec.minus; old.dish=rec.dish;
+        old.short=shortName(rec.name);
+        kept.push(old);
+      } else {
+        fresh.push(rec);
+      }
+    });
+    var gone=Object.keys(byAddr).length;
+
+    // One address at a time: OneMap rate-limits a burst of parallel queries.
+    var added=[], failed=[];
+    var chain=fresh.reduce(function(prev,rec){
+      return prev.then(function(){
+        say("Reading the sheet… locating <b>"+esc(rec.name)+"</b>");
+        return geocodeOne(rec.addr).then(function(hit){
+          if(!hit){ failed.push(rec.name); return; }
+          rec.lat=hit.lat; rec.lng=hit.lng;
+          rec.id="new"+added.length+"-"+Math.round(hit.lat*1e5)+"-"+Math.round(hit.lng*1e5);
+          rec.short=shortName(rec.name);
+          var near=nearestStation(rec);
+          rec.mrt=near.mrt; rec.mrtD=near.mrtD;
+          rec.mrtW=Math.max(1,Math.round(near.mrtD/CFG.walk));
+          rec.dir=rec.lng>=(CFG.bbox.lng0+CFG.bbox.lng1)/2?"right":"left";
+          if(!BOUNDS.contains([rec.lat,rec.lng])) outside.push(rec.name);
+          added.push(rec);
+        });
+      });
+    }, Promise.resolve());
+
+    return chain.then(function(){
+      if(!kept.length&&!added.length)
+        throw new Error("the sheet came back with no usable rows");
+
+      PLACES.length=0;
+      kept.concat(added).forEach(function(p){ PLACES.push(p); });
+
+      Object.keys(placeMarkers).forEach(function(id){
+        if(!PLACES.some(function(p){ return p.id===id; })){
+          var m=placeMarkers[id];
+          map.removeLayer(m); map.removeLayer(m._ring); map.removeLayer(m._dot);
+          delete placeMarkers[id];
+        }
+      });
+      added.forEach(addMarker);
+      if(state.sel&&!placeMarkers[state.sel]) state.sel=null;
+      draw();
+
+      var bits=[];
+      if(added.length) bits.push("<b>"+added.length+" new</b>");
+      if(changed)      bits.push("<b>"+changed+" updated</b>");
+      if(gone)         bits.push("<b>"+gone+" removed</b>");
+      var msg = bits.length
+        ? "Pulled "+bits.join(", ")+" — "+PLACES.length+" places now."
+        : "Already up to date — "+PLACES.length+" places.";
+      if(failed.length)
+        msg+=' <span class="bad">OneMap could not place '+esc(failed.join(", "))+
+             ". Check the address in the sheet.</span>";
+      if(outside.length)
+        msg+=' <span class="bad">'+esc(outside.join(", "))+
+             " sits outside the drawn area, so the map under that pin is blank"+
+             " until the page is rebuilt.</span>";
+      if(bits.length)
+        msg+=" This view only — run <b>./update.sh</b>, or the"+
+             " <b>Refresh from sheet</b> action on GitHub, to make it stick.";
+      say(msg);
+    });
+  }
+
+  function pull(){
+    pullBtn.disabled=true; say("Reading the sheet…");
+    fetch(CSV_URL,{cache:"no-store"})
+      .then(function(r){
+        if(!r.ok) throw new Error("the sheet would not load (HTTP "+r.status+
+          "). Check it is still shared with anyone who has the link.");
+        return r.text();
+      })
+      .then(function(text){ return applySheet(readSheet(text)); })
+      .catch(function(err){
+        say("Could not pull: "+esc(err.message||String(err))+
+            ". The page is still showing the last build.", true);
+      })
+      .then(function(){ pullBtn.disabled=false; });
+  }
+
+  if(pullBtn) pullBtn.addEventListener("click",pull);
 
   var mq=window.matchMedia("(prefers-color-scheme: dark)");
   (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(function(){ setTiles(); draw(); });
