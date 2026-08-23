@@ -912,6 +912,8 @@ tbody tr:last-child td{border-bottom:none}
    1 change", so the column stretched to fit 36 characters and every "3 min"
    beside it right-aligned to the far edge, a hand's width from its own
    heading. Nothing was misaligned - one row was twice as wide as the rest. */
+/* Left-aligned, but the digits still line up: c-dist carries tabular figures,
+   so "4 min" and "17 min" agree on where the numerals sit. */
 th.first, td.first{width:136px; padding-left:18px}
 td.first .c-dist{white-space:nowrap}
 
@@ -1034,7 +1036,7 @@ html{-webkit-text-size-adjust:100%}
       <table id="list">
         <thead>
           <tr>
-            <th class="num first" scope="col" data-sort="dist" aria-sort="ascending"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
+            <th class="first" scope="col" data-sort="dist" aria-sort="ascending"><button type="button"><span id="thFrom">From home</span><span class="car">&#9650;</span></button></th>
             <th class="wide" scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
             <th class="by" scope="col" data-sort="by" aria-sort="none"><button type="button">By<span class="car">&#9650;</span></button></th>
             <th scope="col" data-sort="rating" aria-sort="none"><button type="button">Rating<span class="car">&#9650;</span></button></th>
@@ -1463,7 +1465,7 @@ html{-webkit-text-size-adjust:100%}
     document.getElementById("rows").innerHTML=T.map(function(row){
       var p=row.p, on=state.sel===p.id;
       return '<tr data-place="'+p.id+'" tabindex="0" aria-selected="'+(on?"true":"false")+'">'+
-        '<td class="num first"><span class="c-dist">'+tripMin(row)+' min</span>'+tripLine(row)+'</td>'+
+        '<td class="first"><span class="c-dist">'+tripMin(row)+' min</span>'+tripLine(row)+'</td>'+
         '<td class="c-name">'+esc(p.name)+'<span class="c-cat">'+esc(p.cat)+'</span></td>'+
         '<td class="by">'+(p.by?'<span class="who">'+esc(p.by)+'</span>':'')+'</td>'+
         '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
