@@ -168,21 +168,23 @@ number of minutes means nothing if the reader cannot tell whether they are
 walking it or catching a train.
 
 Routing is the one OneMap service that needs a login. Get a free account at
-[onemap.gov.sg](https://www.onemap.gov.sg/) (no card, no billing), then either:
+[onemap.gov.sg](https://www.onemap.gov.sg/) (no card, no billing). For a one-off
+local build a token copied from the OneMap dashboard is enough — it lasts about
+three days:
 
 ```
-export ONEMAP_EMAIL=you@example.com ONEMAP_PASSWORD=...
+export ONEMAP_TOKEN=eyJhbGci...
 ```
 
-or write `build/onemap.auth.json` — which is gitignored, because this repo is
-public and a password in it would be a password published:
+For the weekly action, use the email and password instead, so the build mints
+its own token and nothing expires under it. Add them as repository secrets under
+**Settings → Secrets and variables → Actions**, or locally in
+`build/onemap.auth.json`, which is gitignored because this repo is public and a
+credential in it would be a credential published:
 
 ```json
 { "email": "you@example.com", "password": "..." }
 ```
-
-For the weekly action, add the same two as repository secrets under
-**Settings → Secrets and variables → Actions**.
 
 Without a login the build still succeeds: every row falls back to a
 straight-line walking estimate and labels itself *est. on foot*, so a missing
@@ -190,7 +192,8 @@ credential looks like a missing credential rather than like data.
 
 Answers are cached in `data/routes.json`, keyed by coordinates, so a rebuild
 only asks about pairs it has never seen. Move a place and it is asked again;
-rename one and nothing happens. The itinerary is planned for a representative
+rename one and nothing happens. Two places in the same building share one entry,
+because they are the same journey. The itinerary is planned for a representative
 weekday midday (`route_when` in `config.json`) rather than for the moment of
 the build, so the same page does not report different numbers each time it is
 rebuilt.

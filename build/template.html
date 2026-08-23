@@ -391,7 +391,8 @@ html{-webkit-text-size-adjust:100%}
     if(r.walk && (!r.pt || r.walk.min<=r.pt.min))
       return {min:r.walk.min, mode:"walk", walk:r.walk.walk_m};
     if(r.pt)
-      return {min:r.pt.min, mode:"train", walk:r.pt.walk_m, changes:r.pt.changes||0};
+      return {min:r.pt.min, mode:r.pt.by||"train", walk:r.pt.walk_m,
+              changes:r.pt.changes||0, via:r.pt.via||""};
     return null;
   }
   function tripMin(row){ return row.t ? row.t.min : row.walk; }
@@ -399,8 +400,9 @@ html{-webkit-text-size-adjust:100%}
     var t=row.t;
     if(!t) return '<span class="c-walk est">est. on foot &middot; '+fmtM(row.d)+' direct</span>';
     if(t.mode==="walk") return '<span class="c-walk">walk &middot; '+fmtM(t.walk)+'</span>';
-    return '<span class="c-walk">train &middot; '+Math.max(1,Math.round(t.walk/CFG.walk))+
-           ' min walk'+(t.changes?' &middot; '+t.changes+' change'+(t.changes>1?'s':''):'')+'</span>';
+    return '<span class="c-walk">'+esc(t.mode)+' &middot; '+
+           Math.max(1,Math.round(t.walk/CFG.walk))+' min walk'+
+           (t.changes?' &middot; '+t.changes+' change'+(t.changes>1?'s':''):'')+'</span>';
   }
 
   var COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
@@ -732,7 +734,8 @@ html{-webkit-text-size-adjust:100%}
             '<div class="stat"><span class="stat-k">From '+esc(H.name)+'</span>'+
               '<span class="stat-v">'+tripMin(row)+' min<small>'+
               (row.t ? (row.t.mode==="walk" ? "walk · "+fmtM(row.t.walk)
-                                            : "train · "+fmtM(row.d)+" direct")
+                                            : row.t.mode+(row.t.via?" "+row.t.via:"")+
+                                              " · "+Math.max(1,Math.round(row.t.walk/CFG.walk))+" min walk")
                      : "est. on foot · "+fmtM(row.d)+" direct")+
               '</small></span></div>'+
             '<div class="stat"><span class="stat-k">Nearest MRT</span>'+

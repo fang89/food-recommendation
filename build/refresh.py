@@ -336,11 +336,17 @@ def onemap_token(warnings):
     gitignored - this repo is public and a password in it would be a password
     published.
     """
-    email = os.environ.get("ONEMAP_EMAIL")
-    password = os.environ.get("ONEMAP_PASSWORD")
-    if not (email and password) and os.path.exists(AUTH):
-        creds = json.load(open(AUTH))
-        email, password = creds.get("email"), creds.get("password")
+    creds = json.load(open(AUTH)) if os.path.exists(AUTH) else {}
+
+    # A token straight from the OneMap dashboard is enough, and is the only
+    # thing needed for a one-off local build. It expires in about three days,
+    # so CI wants the email and password instead and mints its own.
+    token = os.environ.get("ONEMAP_TOKEN") or creds.get("token")
+    if token:
+        return token
+
+    email = os.environ.get("ONEMAP_EMAIL") or creds.get("email")
+    password = os.environ.get("ONEMAP_PASSWORD") or creds.get("password")
     if not (email and password):
         warnings.append("No OneMap login, so travel times could not be looked up. "
                         "The page falls back to straight-line distance. Put the "
@@ -360,13 +366,18 @@ def onemap_token(warnings):
 
 
 def route_when(text):
-    """Turn "Mon 12:30" into the next such moment, as OneMap wants it."""
+    """Turn "Mon 12:30" into the next such moment, as OneMap wants it.
+
+    OneMap's routing service wants MM-DD-YYYY, and rejects anything else with
+    a 400 that names the format - which is the one kind of API error worth
+    having.
+    """
     days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     want, clock = (text.split() + ["12:30"])[:2]
     today = datetime.date.today()
     ahead = (days.index(want) - today.weekday()) % 7 or 7
     day = today + datetime.timedelta(days=ahead)
-    return day.isoformat(), clock if clock.count(":") == 2 else clock + ":00"
+    return day.strftime("%m-%d-%Y"), clock if clock.count(":") == 2 else clock + ":00"
 
 
 def ask_route(token, mode, a, b, when):
@@ -401,9 +412,18 @@ def ask_route(token, mode, a, b, when):
         return None
     best = plan[0]
     legs = [l for l in best.get("legs", []) if l.get("mode") != "WALK"]
+    if not legs:
+        return None                      # "public transport" that is all walking
+
+    # Say train or bus, not "public transport". OneMap answers with whatever is
+    # quickest, and for a couple of these places that is a bus - calling that a
+    # train would send somebody to the wrong end of the street.
+    kinds = {"train" if l.get("mode") in ("SUBWAY", "RAIL", "TRAM") else "bus"
+             for l in legs}
     return {"min": max(1, round(best["duration"] / 60)),
             "walk_m": round(best.get("walkDistance", 0)),
-            "changes": max(0, len(legs) - 1),
+            "changes": int(best.get("transfers") or max(0, len(legs) - 1)),
+            "by": " + ".join(sorted(kinds)),
             "via": " \u2192 ".join(l.get("route") or l.get("mode", "") for l in legs)[:40]}
 
 
