@@ -64,6 +64,11 @@ weekly, so the page does not silently rot if nobody presses anything.
 git add -A && git commit -m "Refresh from sheet" && git push
 ```
 
+Every push also runs `build/test_refresh.py`, a rebuild that must leave
+`index.html` unchanged, and `build/smoke.py` — see **Actions → CI**. The refresh
+action only ran those when somebody pressed it, so a hand-pushed change went
+straight to the live site untested.
+
 `update.sh` runs three steps:
 
 **`build/refresh.py`** downloads the sheet, geocodes anything new, and rewrites
@@ -94,6 +99,12 @@ older build may have left behind.
 
 **`build/build.py`** inlines Leaflet and `data/*.json` into a single `index.html`.
 The basemap is not inlined — it comes live from CARTO at view time.
+
+**`build/test_refresh.py`** covers the sheet reader itself — header drift,
+reordered columns, the self-closing cell that once made a blank Minus swallow the
+Rating beside it, the postal column, and ids that must not collide. It is the
+half `smoke.py` cannot reach: every bug this file has had was invisible from the
+page, because the map still drew and the table still filled.
 
 **`build/smoke.py`** then runs the built page's script against a stubbed Leaflet
 and DOM, and fails if the map never got a view, the table body never got written,

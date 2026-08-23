@@ -1,0 +1,36 @@
+name: CI
+
+# The refresh workflow tests the page, but only when it runs - on a Monday, or
+# when somebody presses it. A change pushed by hand went straight to the live
+# site untested, which is exactly when a typo in template.html becomes a blank
+# map. This runs on every push instead.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test the sheet reader
+        run: python3 build/test_refresh.py
+
+      # index.html is a build artifact that is committed, because Pages serves
+      # it as-is. So it can drift from the data it was built from: edit
+      # data/*.json, forget to rebuild, and the page keeps showing the old list
+      # while the repo looks right. Rebuilding and diffing is the whole check.
+      - name: index.html must match the data it was built from
+        run: |
+          python3 build/build.py
+          git diff --exit-code -- index.html \
+            || { echo "::error::index.html is stale - run ./update.sh and commit the result"; exit 1; }
+
+      - name: Smoke test the built page
+        run: python3 build/smoke.py

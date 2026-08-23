@@ -43,6 +43,9 @@ jobs:
           python3 build/refresh.py
           python3 build/build.py
 
+      - name: Test the sheet reader
+        run: python3 build/test_refresh.py
+
       - name: Smoke test the built page
         run: python3 build/smoke.py
 
