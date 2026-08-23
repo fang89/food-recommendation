@@ -1,8 +1,8 @@
 # Food recommendation
 
-Sixteen places worth going back to around Boon Keng, Bendemeer and Geylang Bahru — with
-what was ordered, what it cost, how it scored, how far it is, and which MRT station
-actually serves it.
+Places worth going back to, most of them around Boon Keng, Bendemeer and Geylang
+Bahru — with what was ordered, what it cost, how it scored, how far it is, and which
+MRT station actually serves it.
 
 **Live:** https://fang89.github.io/food-recommendation/
 

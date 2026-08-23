@@ -13,10 +13,10 @@
   "walk_speed_m_per_min": 80,
   "_bbox": "Recomputed by refresh.py to cover every place, home and station. Changing it makes build.py fetch a fresh set of tiles.",
   "bbox": {
-    "lat0": 1.27957,
-    "lat1": 1.32402,
-    "lng0": 103.84257,
-    "lng1": 103.87282
+    "lat0": 1.27574,
+    "lat1": 1.35308,
+    "lng0": 103.83397,
+    "lng1": 103.89658
   },
   "bbox_pad_deg": 0.0012,
   "zooms": [
