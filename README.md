@@ -159,6 +159,42 @@ are the only things fetched at runtime.
 - **Place data is never hand-edited.** It comes from `data/*.json`, which comes from
   the sheet.
 
+## Travel times
+
+The **From <home>** column is how long it takes, not how far it is. OneMap costs
+every home-to-place pair two ways at build time — on foot, and by public
+transport — and the page shows whichever is quicker, saying which it is. A
+number of minutes means nothing if the reader cannot tell whether they are
+walking it or catching a train.
+
+Routing is the one OneMap service that needs a login. Get a free account at
+[onemap.gov.sg](https://www.onemap.gov.sg/) (no card, no billing), then either:
+
+```
+export ONEMAP_EMAIL=you@example.com ONEMAP_PASSWORD=...
+```
+
+or write `build/onemap.auth.json` — which is gitignored, because this repo is
+public and a password in it would be a password published:
+
+```json
+{ "email": "you@example.com", "password": "..." }
+```
+
+For the weekly action, add the same two as repository secrets under
+**Settings → Secrets and variables → Actions**.
+
+Without a login the build still succeeds: every row falls back to a
+straight-line walking estimate and labels itself *est. on foot*, so a missing
+credential looks like a missing credential rather than like data.
+
+Answers are cached in `data/routes.json`, keyed by coordinates, so a rebuild
+only asks about pairs it has never seen. Move a place and it is asked again;
+rename one and nothing happens. The itinerary is planned for a representative
+weekday midday (`route_when` in `config.json`) rather than for the moment of
+the build, so the same page does not report different numbers each time it is
+rebuilt.
+
 ## Moving around the map
 
 The map is a tall panel in the middle of a page that scrolls, so it must not

@@ -240,6 +240,7 @@ tbody tr:last-child td{border-bottom:none}
 .c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
 .c-cat{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
 .c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
+.c-walk.est{opacity:.72; font-style:italic}
 .c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
 .pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
 .pill.NE{background:var(--ne)} .pill.DT{background:var(--dt)} .pill.EW{background:var(--ew)}
@@ -367,6 +368,7 @@ html{-webkit-text-size-adjust:100%}
   var HOMES=/*__HOMES__*/;
   var MRT=/*__MRT__*/;            // drawn on the map: the neighbourhood
   var STATIONS=/*__STATIONS__*/;  // the whole network: who is nearest, really
+  var ROUTES=/*__ROUTES__*/;      // measured door-to-door times, per home
   var PLACES=/*__PLACES__*/;
 
   // Any station can be named in the table, so the lookup spans the network.
@@ -376,6 +378,30 @@ html{-webkit-text-size-adjust:100%}
   STATIONS.forEach(function(s){ BY_CODE[s.code]=s; });
   MRT.forEach(function(s){ BY_CODE[s.code]=s; });
   PLACES.forEach(function(p){ p.mrt=BY_CODE[p.mrt]; p.mrtW=Math.max(1,Math.round(p.mrtD/CFG.walk)); });
+
+  // OneMap costed every home-to-place pair two ways at build time. Show
+  // whichever is quicker, and say which it is - "18 min" means nothing if the
+  // reader cannot tell whether they are walking it or catching a train.
+  function rkey(a,b){
+    return a.lat.toFixed(5)+","+a.lng.toFixed(5)+">"+b.lat.toFixed(5)+","+b.lng.toFixed(5);
+  }
+  function trip(H,p){
+    var r=ROUTES[rkey(H,p)];
+    if(!r) return null;                  // pulled in the browser, never routed
+    if(r.walk && (!r.pt || r.walk.min<=r.pt.min))
+      return {min:r.walk.min, mode:"walk", walk:r.walk.walk_m};
+    if(r.pt)
+      return {min:r.pt.min, mode:"train", walk:r.pt.walk_m, changes:r.pt.changes||0};
+    return null;
+  }
+  function tripMin(row){ return row.t ? row.t.min : row.walk; }
+  function tripLine(row){
+    var t=row.t;
+    if(!t) return '<span class="c-walk est">est. on foot &middot; '+fmtM(row.d)+' direct</span>';
+    if(t.mode==="walk") return '<span class="c-walk">walk &middot; '+fmtM(t.walk)+'</span>';
+    return '<span class="c-walk">train &middot; '+Math.max(1,Math.round(t.walk/CFG.walk))+
+           ' min walk'+(t.changes?' &middot; '+t.changes+' change'+(t.changes>1?'s':''):'')+'</span>';
+  }
 
   var COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
   var NICE=[50,100,200,250,500,1000,2000];
@@ -501,7 +527,7 @@ html{-webkit-text-size-adjust:100%}
   var SORTS={
     name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
     near:function(a,b){ return a.rank-b.rank; },
-    dist:function(a,b){ return a.d-b.d; },
+    dist:function(a,b){ return tripMin(a)-tripMin(b) || a.d-b.d; },
     mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
     rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
     price:function(a,b){ return a.p.price.length-b.p.price.length || b.p.rating-a.p.rating; }
@@ -634,8 +660,9 @@ html{-webkit-text-size-adjust:100%}
     return PLACES.filter(function(p){ return !state.cat || p.cat===state.cat; })
       .map(function(p){
       var d=dist(H,p), b=bearing(H,p);
-      return {p:p,d:d,b:b,cp:COMPASS[Math.floor(((b+11.25)%360)/22.5)],walk:walkMin(d)};
-    }).sort(function(x,y){ return x.d-y.d; });
+      return {p:p,d:d,b:b,cp:COMPASS[Math.floor(((b+11.25)%360)/22.5)],
+              walk:walkMin(d), t:trip(H,p)};
+    }).sort(function(x,y){ return tripMin(x)-tripMin(y) || x.d-y.d; });
   }
 
   function noteHTML(p,cls){
@@ -655,7 +682,9 @@ html{-webkit-text-size-adjust:100%}
     PLACES.forEach(function(p){ showPlace(p.id, !!shown[p.id]); });
     if(!R.length){ drawEmpty(H); return; }
 
-    var max=R[R.length-1].d;
+    // Rings are still geodesic, so their outer edge is the farthest place by
+    // distance - which after sorting by travel time is no longer the last row.
+    var max=R.reduce(function(m,row){ return Math.max(m,row.d); },0);
     var inkDim=css("--ink-3"), acc=css("--accent");
 
     var step=NICE[0];
@@ -701,7 +730,11 @@ html{-webkit-text-size-adjust:100%}
           '</div>'+
           '<div class="card-grid">'+
             '<div class="stat"><span class="stat-k">From '+esc(H.name)+'</span>'+
-              '<span class="stat-v">'+fmtM(row.d)+'<small>'+row.walk+' min · '+row.cp+'</small></span></div>'+
+              '<span class="stat-v">'+tripMin(row)+' min<small>'+
+              (row.t ? (row.t.mode==="walk" ? "walk · "+fmtM(row.t.walk)
+                                            : "train · "+fmtM(row.d)+" direct")
+                     : "est. on foot · "+fmtM(row.d)+" direct")+
+              '</small></span></div>'+
             '<div class="stat"><span class="stat-k">Nearest MRT</span>'+
               '<span class="stat-v"><span class="pill '+p.mrt.line+'">'+p.mrt.code+'</span>'+
               '<small>'+esc(p.mrt.name)+' · '+p.mrtW+' min</small></span></div>'+
@@ -731,7 +764,7 @@ html{-webkit-text-size-adjust:100%}
         '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
         '<td>'+priceBar(p.price)+'</td>'+
         '<td class="c-note">'+noteHTML(p)+'</td>'+
-        '<td class="num"><span class="c-dist">'+fmtM(row.d)+'</span><span class="c-walk">'+row.walk+' min walk</span></td>'+
+        '<td class="num"><span class="c-dist">'+tripMin(row)+' min</span>'+tripLine(row)+'</td>'+
         '<td><span class="pill '+p.mrt.line+'">'+p.mrt.code+'</span><span class="c-stn">'+esc(p.mrt.name)+' · '+p.mrtW+' min</span></td>'+
         '<td><a class="go" href="'+gmaps(p)+'" target="_blank" rel="noopener noreferrer" '+
           'aria-label="Walking directions from your location to '+esc(p.name)+' in Google Maps">Directions &#8599;</a></td>'+

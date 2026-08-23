@@ -18,6 +18,7 @@ What it copes with, because the sheet has done all of it already:
 """
 import argparse
 import csv
+import datetime
 import html as html_mod, io, json, math, os, re, sys, time
 import urllib.error, urllib.parse, urllib.request, zipfile
 
@@ -318,6 +319,131 @@ def csv_crosscheck(cfg, places, warnings):
             warnings.append("%s (%s): in the CSV but not in this build." % (name, addr))
 
 
+# ---------------------------------------------------------------- routing ----
+
+ROUTES  = os.path.join(DATA, "routes.json")
+AUTH    = os.path.join(ROOT, "build", "onemap.auth.json")
+ROUTE   = "https://www.onemap.gov.sg/api/public/routingsvc/route"
+TOKENURL = "https://www.onemap.gov.sg/api/auth/post/getToken"
+
+
+def onemap_token(warnings):
+    """A OneMap routing token, or None if nobody has supplied a login.
+
+    Routing is the one OneMap service that is not open: search answers anybody,
+    routing wants a bearer token. The login is read from the environment first
+    so CI can pass it as a secret, then from build/onemap.auth.json, which is
+    gitignored - this repo is public and a password in it would be a password
+    published.
+    """
+    email = os.environ.get("ONEMAP_EMAIL")
+    password = os.environ.get("ONEMAP_PASSWORD")
+    if not (email and password) and os.path.exists(AUTH):
+        creds = json.load(open(AUTH))
+        email, password = creds.get("email"), creds.get("password")
+    if not (email and password):
+        warnings.append("No OneMap login, so travel times could not be looked up. "
+                        "The page falls back to straight-line distance. Put the "
+                        "login in ONEMAP_EMAIL / ONEMAP_PASSWORD or in "
+                        "build/onemap.auth.json.")
+        return None
+    try:
+        body = json.dumps({"email": email, "password": password}).encode()
+        req = urllib.request.Request(TOKENURL, data=body,
+                                     headers={"Content-Type": "application/json",
+                                              "User-Agent": "food-recommendation refresh"})
+        return json.load(urllib.request.urlopen(req, timeout=30))["access_token"]
+    except Exception as exc:
+        warnings.append("OneMap would not issue a routing token (%s). Travel times "
+                        "fall back to straight-line distance." % exc)
+        return None
+
+
+def route_when(text):
+    """Turn "Mon 12:30" into the next such moment, as OneMap wants it."""
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    want, clock = (text.split() + ["12:30"])[:2]
+    today = datetime.date.today()
+    ahead = (days.index(want) - today.weekday()) % 7 or 7
+    day = today + datetime.timedelta(days=ahead)
+    return day.isoformat(), clock if clock.count(":") == 2 else clock + ":00"
+
+
+def ask_route(token, mode, a, b, when):
+    """One leg, one mode. Returns minutes and walking metres, or None."""
+    args = {"start": "%.6f,%.6f" % (a["lat"], a["lng"]),
+            "end":   "%.6f,%.6f" % (b["lat"], b["lng"]),
+            "routeType": mode}
+    if mode == "pt":
+        args.update({"date": when[0], "time": when[1], "mode": "TRANSIT",
+                     "maxWalkDistance": "1200", "numItineraries": "1"})
+    url = ROUTE + "?" + urllib.parse.urlencode(args)
+    req = urllib.request.Request(url, headers={"Authorization": token,
+                                               "User-Agent": "food-recommendation refresh"})
+    for attempt in range(4):
+        try:
+            data = json.load(urllib.request.urlopen(req, timeout=30))
+            break
+        except Exception:
+            time.sleep(1.2 * (attempt + 1))
+    else:
+        return None
+
+    if mode == "walk":
+        summary = (data.get("route_summary") or {})
+        if "total_time" not in summary:
+            return None
+        return {"min": max(1, round(summary["total_time"] / 60)),
+                "walk_m": round(summary.get("total_distance", 0))}
+
+    plan = (data.get("plan") or {}).get("itineraries") or []
+    if not plan:
+        return None
+    best = plan[0]
+    legs = [l for l in best.get("legs", []) if l.get("mode") != "WALK"]
+    return {"min": max(1, round(best["duration"] / 60)),
+            "walk_m": round(best.get("walkDistance", 0)),
+            "changes": max(0, len(legs) - 1),
+            "via": " \u2192 ".join(l.get("route") or l.get("mode", "") for l in legs)[:40]}
+
+
+def travel_times(cfg, homes, places, warnings):
+    """Fill data/routes.json with a walk and a train+walk time for every pair.
+
+    Keyed by rounded coordinates, not by name or id, so renaming a place on the
+    sheet costs nothing and moving one asks again - which is the behaviour you
+    want from a cache of "how long does it take to get from here to there".
+    """
+    cache = json.load(open(ROUTES)) if os.path.exists(ROUTES) else {}
+    pairs = [(h, p) for h in homes for p in places]
+    key = lambda a, b: "%.5f,%.5f>%.5f,%.5f" % (a["lat"], a["lng"], b["lat"], b["lng"])
+    missing = [(h, p) for h, p in pairs if key(h, p) not in cache]
+    if not missing:
+        return cache
+
+    token = onemap_token(warnings)
+    if not token:
+        return cache
+
+    when = route_when(cfg.get("route_when", "Mon 12:30"))
+    print("  routing %d new pairs (%s %s)" % (len(missing), when[0], when[1]))
+    got = 0
+    for home, place in missing:
+        walk = ask_route(token, "walk", home, place, when)
+        transit = ask_route(token, "pt", home, place, when)
+        if not walk and not transit:
+            warnings.append("No route from %s to %s - that pair keeps its "
+                            "straight-line distance." % (home["name"], place["name"]))
+            continue
+        cache[key(home, place)] = {k: v for k, v in
+                                   (("walk", walk), ("pt", transit)) if v}
+        got += 1
+        time.sleep(0.25)                      # OneMap rate-limits a burst
+    json.dump(cache, open(ROUTES, "w"), indent=1, sort_keys=True, ensure_ascii=False)
+    print("  %d pairs routed, %d cached in total" % (got, len(cache)))
+    return cache
+
+
 # ------------------------------------------------------------------ main ----
 
 STATIONS = os.path.join(DATA, "stations.json")
@@ -482,6 +608,7 @@ def main():
         cfg["bbox"] = bbox
         json.dump(cfg, open(CONFIG, "w"), indent=2)
 
+    # Ids are assigned below, so route lookup happens after them.
     order = ["id", "name", "short", "cat", "lat", "lng", "addr", "price",
              "plus", "minus", "rating", "mrt", "mrtD", "dir", "matched"]
     shorts = cfg.get("short_names", {})
@@ -490,12 +617,18 @@ def main():
         rec["short"] = shorts.get(rec["name"]) or shorten(rec["name"])
     places.sort(key=lambda r: (-r["rating"], r["name"]))
 
+    # How long it actually takes, per home, on foot and by train. Keyed the way
+    # the page keys it, so the page can look a pair up without knowing anything
+    # about how it was fetched.
+    routes = travel_times(cfg, homes, places, warnings)
+    json.dump(routes, open(ROUTES, "w"), indent=1, sort_keys=True, ensure_ascii=False)
+
     json.dump([{k: p[k] for k in order if k in p} for p in places],
               open(os.path.join(DATA, "places.json"), "w"), indent=1, ensure_ascii=False)
     json.dump(homes, open(os.path.join(DATA, "homes.json"), "w"), indent=1, ensure_ascii=False)
     json.dump(mrt,   open(os.path.join(DATA, "mrt.json"), "w"), indent=1, ensure_ascii=False)
 
-    print("\nwrote data/places.json, data/homes.json, data/mrt.json")
+    print("\nwrote data/places.json, data/homes.json, data/mrt.json, data/routes.json")
     if warnings:
         print("\n%d thing%s worth a look:" % (len(warnings), "" if len(warnings) == 1 else "s"))
         for w in warnings:

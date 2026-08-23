@@ -33,6 +33,12 @@ jobs:
           python-version: "3.12"
 
       - name: Pull the sheet and rebuild
+        env:
+          # Routing is the one OneMap service that needs a login. Add these two
+          # under Settings -> Secrets and variables -> Actions. Without them the
+          # build still succeeds; travel times just fall back to distance.
+          ONEMAP_EMAIL: ${{ secrets.ONEMAP_EMAIL }}
+          ONEMAP_PASSWORD: ${{ secrets.ONEMAP_PASSWORD }}
         run: |
           python3 build/refresh.py
           python3 build/build.py

@@ -89,5 +89,8 @@
     "JE",
     "JS"
   ],
-  "_mrt_lines_excluded": "Cross Island and Jurong Region line stations are in OneMap's index but not in passenger service, so naming one as your nearest station would be a station you cannot catch a train at. Remove a code here once its line opens."
+  "_mrt_lines_excluded": "Cross Island and Jurong Region line stations are in OneMap's index but not in passenger service, so naming one as your nearest station would be a station you cannot catch a train at. Remove a code here once its line opens.",
+  "_routing": "Travel times come from OneMap's routing service, which needs a free account. Put the login in ONEMAP_EMAIL / ONEMAP_PASSWORD, or in build/onemap.auth.json (gitignored). Without it the page falls back to straight-line distance and says so. Answers are cached in data/routes.json, keyed by coordinates, so a rebuild only asks about pairs it has never seen.",
+  "route_when": "Mon 12:30",
+  "_route_when": "The moment the public-transport itinerary is planned for: a typical weekday midday, away from the peaks. Trains do not vary much, so one representative time beats a number that changes under you every build."
 }

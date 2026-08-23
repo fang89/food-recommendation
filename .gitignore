@@ -1,3 +1,6 @@
 build/tiles-*.pkl
 build/tiles.pkl
 .DS_Store
+
+# A OneMap routing login is a password. This repo is public.
+build/onemap.auth.json

@@ -43,6 +43,7 @@ def main():
         "/*__HOMES__*/":       json.dumps(load("homes.json"),  separators=(",", ":")),
         "/*__MRT__*/":         json.dumps(load("mrt.json"),    separators=(",", ":")),
         "/*__STATIONS__*/":    json.dumps(load("stations.json"), separators=(",", ":")),
+        "/*__ROUTES__*/":      json.dumps(load("routes.json"), separators=(",", ":")),
         "/*__PLACES__*/":      json.dumps(load("places.json"), separators=(",", ":")),
         "__SHEET_URL__":       cfg["sheet_url"],
     }

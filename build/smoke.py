@@ -200,6 +200,21 @@ if(__els["map"] && /failed to draw/.test(__els["map"].innerHTML))
   throw new Error("the page caught its own error and painted the apology: "+
                   String(__els["map"].innerHTML).replace(/<[^>]*>/g," ").slice(0,220));
 if(!__calls["map"])       throw new Error("map was never created");
+
+// refresh.py writes the route cache with Python's "%.5f", the page reads it
+// with JavaScript's toFixed(5). If those ever stop agreeing, every lookup
+// misses and every row silently falls back to a straight-line estimate that
+// looks perfectly reasonable. So: if any routes shipped, at least one pair
+// must actually resolve.
+(function(){
+  var n=0; for(var k in ROUTES) n++;
+  if(!n) return;                       // no login yet - the fallback is the design
+  var hit=0;
+  HOMES.forEach(function(h){ PLACES.forEach(function(p){ if(trip(h,p)) hit++; }); });
+  if(!hit)
+    throw new Error(n + " routes shipped and not one of them could be looked up - "+
+                    "the key the build writes and the key the page reads disagree");
+})();
 if(STATIONS.length<100)
   throw new Error("only " + STATIONS.length + " stations shipped - the nearest-MRT column "+
                   "would be answered from the neighbourhood, which is how a place in "+
