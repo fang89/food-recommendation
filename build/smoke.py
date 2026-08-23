@@ -251,6 +251,13 @@ if(HOMES.length>1){
   if(state.home===was) throw new Error("switching home did not change the datum");
   if((__calls["setView"]||0)<=views)
     throw new Error("switching home did not recentre the map on that home");
+  // Pressing the house you are already on is how you come back to it after
+  // panning away. It changes no state, so it is exactly the case an early
+  // return swallows - and then the button looks pressed and does nothing.
+  views=__calls["setView"]||0;
+  setHome(state.home);
+  if((__calls["setView"]||0)<=views)
+    throw new Error("pressing the home already selected did not recentre - the button does nothing once you have panned away");
 }
 
 // The "Pull from sheet" button must survive a whole round trip: fetch the CSV,

@@ -671,11 +671,16 @@ html{-webkit-text-size-adjust:100%}
 
   function setHome(k){
     k=+k;
-    if(!HOMES[k]||state.home===k) return;
-    state.home=k; draw();
+    if(!HOMES[k]) return;
+    // Pressing the house you are already measuring from is how you get back to
+    // it after panning away, so it has to recentre even when nothing changes.
+    // Only an actual switch of datum needs the redraw and the announcement.
+    if(state.home!==k){
+      state.home=k; draw();
+      document.getElementById("live").textContent="Measuring from "+HOMES[k].name+".";
+    }
     recentre(HOMES[k]);
     if(state.sel) placeMarkers[state.sel].openPopup();
-    document.getElementById("live").textContent="Measuring from "+HOMES[k].name+".";
   }
 
   // Anything you pick becomes the thing the map is about: a house you are now
