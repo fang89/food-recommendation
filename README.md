@@ -219,6 +219,16 @@ what leaves `touch-action` at `pan-x pan-y`, which is what lets the browser keep
 the one-finger scroll for itself. It has to be decided before the first gesture,
 because `touch-action` is read when a gesture begins.
 
+## The workings, on the page itself
+
+Below a deliberately loud rule at the bottom of the page there is a section
+explaining how the page is built and listing six things that turned out to be
+wrong along the way — the baked-in basemap, the restaurant next to Chinatown
+reported as a walk from Farrer Park, the empty spreadsheet cell that swallowed
+its neighbour, the missing viewport, distance mistaken for time, and Leaflet's
+flag. Its statistics are counted from the data on the page at render time, so
+they cannot go stale, and they follow whichever house is the datum.
+
 ## Caveats
 
 - **Distances are geodesic** — straight lines from the datum, not walking routes.
