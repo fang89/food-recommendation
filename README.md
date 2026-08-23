@@ -12,9 +12,11 @@ MRT station actually serves it.
   out nearest to something on the list — drawn in their real line colours (NE purple,
   DT blue, EW green).
 - **Three datums.** Click any home triangle, or the switch above the map, and the
-  distance rings, measured runs, distances, bearings and walking times all recompute
-  from that door — and the map recentres on it, since that is what you are now
-  measuring from.
+  distance rings, distances, bearings and walking times all recompute from that door
+  — and the map recentres on it, since that is what you are now measuring from.
+- **One run at a time.** The line from the door to a place is drawn only for the
+  place you have selected. Drawing all of them turned the neighbourhood into a fan
+  of dashes with the streets underneath unreadable.
 - **A sortable list.** Sort by proximity rank, place, rating, price, distance from the
   active door, or walk to the nearest MRT. Clicking a row finds that place on the map.
 - **A card per place** on click — rating, price band, distance, station, the plus and

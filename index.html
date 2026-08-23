@@ -875,7 +875,7 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px)
 .k-ne{width:22px; height:11px; border-radius:6px; background:var(--ne)}
 .k-dt{width:22px; height:11px; border-radius:6px; background:var(--dt)}
 .k-ew{width:22px; height:11px; border-radius:6px; background:var(--ew)}
-.k-line{width:20px; height:0; border-top:2px dashed var(--accent)}
+.k-line{width:20px; height:0; border-top:2px solid var(--accent)}
 
 /* ---- sortable list ---- */
 .tablewrap{overflow-x:auto; background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow)}
@@ -1020,7 +1020,7 @@ html{-webkit-text-size-adjust:100%}
         <span><i class="k-ne"></i>North East</span>
         <span><i class="k-dt"></i>Downtown</span>
         <span><i class="k-ew"></i>East West</span>
-        <span><i class="k-line"></i>measured run</span>
+        <span><i class="k-line"></i>selected run</span>
       </div>
     </figure>
     <p class="sr" id="live" role="status" aria-live="polite"></p>
@@ -1400,12 +1400,13 @@ html{-webkit-text-size-adjust:100%}
     }
     document.getElementById("capRing").textContent="rings every "+fmtRing(step);
 
+    // Only the selected place gets a run drawn. One line answers "which one is
+    // that, and how far"; twenty-four of them just cover the streets underneath.
     gLines.clearLayers();
     R.forEach(function(row){
-      var on=state.sel===row.p.id, dim=state.sel&&!on;
+      if(state.sel!==row.p.id) return;
       L.polyline([[H.lat,H.lng],[row.p.lat,row.p.lng]],{
-        color:acc, weight:on?3:1.5, opacity:dim?.16:(on?1:.62),
-        dashArray:on?null:"5 4", interactive:false}).addTo(gLines);
+        color:acc, weight:3, opacity:1, interactive:false}).addTo(gLines);
     });
 
     R.forEach(function(row){
