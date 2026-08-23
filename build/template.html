@@ -1,0 +1,653 @@
+<title>Food Recommendation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+
+<style>/*__LEAFLET_CSS__*/</style>
+
+<style>
+:root{
+  --paper:#E7ECEF; --sheet:#F8FAFB; --sheet-2:#EFF3F5;
+  --ink:#131C24; --ink-2:#5A6B77; --ink-3:#8095A2;
+  --rule:#C3CED5; --rule-soft:#D8E0E5;
+  --accent:#A82F26; --accent-ink:#8E271F; --accent-wash:rgba(168,47,38,.07); --on-accent:#FFF7F5;
+  --halo:rgba(248,250,251,.93);
+  --ne:#9E28B5; --dt:#005EC4; --ew:#00803A;
+  --shadow:0 1px 2px rgba(19,28,36,.05), 0 8px 24px -12px rgba(19,28,36,.18);
+  --display:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --body:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1418; --sheet:#151E24; --sheet-2:#111A20;
+    --ink:#E2E9ED; --ink-2:#8DA1AD; --ink-3:#6B7F8B;
+    --rule:#27333B; --rule-soft:#1E2830;
+    --accent:#E4726A; --accent-ink:#F0938C; --accent-wash:rgba(228,114,106,.10); --on-accent:#14191C;
+    --halo:rgba(21,30,36,.93);
+    --ne:#C462D6; --dt:#4D93E8; --ew:#3FBE74;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1418; --sheet:#151E24; --sheet-2:#111A20;
+  --ink:#E2E9ED; --ink-2:#8DA1AD; --ink-3:#6B7F8B;
+  --rule:#27333B; --rule-soft:#1E2830;
+  --accent:#E4726A; --accent-ink:#F0938C; --accent-wash:rgba(228,114,106,.10); --on-accent:#14191C;
+  --halo:rgba(21,30,36,.93);
+  --ne:#C462D6; --dt:#4D93E8; --ew:#3FBE74;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper); color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased; padding:clamp(16px,3.5vw,48px) clamp(14px,4vw,40px) 40px}
+.wrap{max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:clamp(22px,3vw,36px)}
+
+header.hero{display:flex; flex-direction:column; gap:10px}
+h1{font-family:var(--display); font-weight:800; font-size:clamp(33px,5.2vw,54px); line-height:1.0; letter-spacing:-.028em; margin:0; text-wrap:balance}
+.cta{display:flex; align-items:center; gap:clamp(16px,2.4vw,28px); flex-wrap:wrap;
+  margin:6px 0 0; padding:clamp(16px,2.1vw,22px) clamp(18px,2.4vw,26px);
+  background:var(--accent-wash); border:1px solid var(--accent); border-radius:4px}
+.addlink{display:inline-flex; align-items:center; gap:9px; font-family:var(--mono); font-size:13px;
+  font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--on-accent);
+  text-decoration:none; border:1.5px solid var(--accent); border-radius:3px; padding:13px 22px;
+  background:var(--accent); white-space:nowrap; flex:0 0 auto;
+  box-shadow:0 2px 10px -4px var(--accent); transition:filter .15s, transform .15s, box-shadow .15s}
+.addlink:hover{filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 5px 16px -5px var(--accent)}
+.addlink:active{transform:translateY(0)}
+.addlink:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+.cta-copy{flex:1 1 22ch; min-width:0; font-family:var(--body); font-size:16.5px; line-height:1.45; color:var(--ink-2)}
+.cta-copy b{display:block; font-family:var(--display); font-weight:700; font-size:17.5px;
+  letter-spacing:-.012em; color:var(--ink); margin-bottom:2px}
+
+.sec-head{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:13px}
+.sec-head h2{font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:-.012em; margin:0}
+.sec-head .note{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.04em}
+.spacer{flex:1 1 auto}
+
+.switch{display:inline-flex; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--sheet)}
+.switch button{appearance:none; border:0; background:transparent; cursor:pointer; font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2); padding:8px 15px; transition:background .15s,color .15s}
+.switch button+button{border-left:1px solid var(--rule)}
+.switch button:hover{background:var(--sheet-2); color:var(--ink)}
+.switch button[aria-pressed="true"]{background:var(--accent); color:var(--on-accent)}
+.switch button:focus-visible{outline:2px solid var(--accent); outline-offset:-3px}
+
+/* ---- map ---- */
+.mapcard{background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow); overflow:hidden; margin:0}
+.mapcard-cap{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:13px 16px; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:11px; letter-spacing:.07em; text-transform:uppercase}
+.mapcard-cap b{color:var(--ink); font-weight:600}
+.mapcard-cap span{color:var(--ink-3); text-transform:none; letter-spacing:.02em; font-variant-numeric:tabular-nums}
+#map{height:clamp(430px,64vh,700px); width:100%; background:var(--sheet-2)}
+.leaflet-container{font-family:var(--mono); background:var(--sheet-2)}
+.leaflet-control-attribution{font-family:var(--mono); font-size:9.5px; background:var(--halo)!important; color:var(--ink-3)!important}
+.leaflet-control-attribution a{color:var(--ink-2)!important}
+.leaflet-bar a{background:var(--sheet); color:var(--ink); border-bottom-color:var(--rule)}
+.leaflet-bar a:hover{background:var(--sheet-2); color:var(--ink)}
+.leaflet-bar{border:1px solid var(--rule); box-shadow:none}
+
+.hm{display:grid; place-items:center; cursor:pointer}
+.hm i{display:block; width:15px; height:15px; border-radius:50%; border:2px solid var(--ink); background:var(--halo); box-shadow:0 0 0 3px var(--halo); transition:border-color .15s}
+.hm i::after{content:""; display:block; width:5px; height:5px; border-radius:50%; background:var(--ink); margin:3px auto}
+.hm.off i{border-color:var(--ink-3); border-style:dashed}
+.hm.off i::after{background:var(--ink-3)}
+.hm:hover i{border-color:var(--accent)}
+.hm:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:50%}
+
+.mrt{display:flex; align-items:center; justify-content:center; width:48px; height:24px; border-radius:12px;
+  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.04em; color:#fff;
+  box-shadow:0 0 0 2.5px var(--halo), 0 2px 6px rgba(0,0,0,.28)}
+.mrt.NE{background:var(--ne)} .mrt.DT{background:var(--dt)} .mrt.EW{background:var(--ew)}
+
+.leaflet-tooltip.lbl{background:var(--halo); border:1px solid var(--rule); border-radius:2px; box-shadow:none;
+  color:var(--ink); font-family:var(--display); font-weight:600; font-size:12.5px; letter-spacing:-.005em;
+  padding:3px 7px; white-space:nowrap}
+.leaflet-tooltip.lbl::before{display:none}
+.leaflet-tooltip.lbl b{display:block; font-family:var(--mono); font-size:10px; font-weight:500; color:var(--ink-2); letter-spacing:.03em}
+.leaflet-tooltip.lbl.home{font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase}
+.leaflet-tooltip.lbl.stn{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; border-width:1.5px}
+.leaflet-tooltip.lbl.stn.NE{border-color:var(--ne); color:var(--ne)}
+.leaflet-tooltip.lbl.stn.DT{border-color:var(--dt); color:var(--dt)}
+.leaflet-tooltip.lbl.stn.EW{border-color:var(--ew); color:var(--ew)}
+.leaflet-tooltip.lbl.on{border-color:var(--accent); color:var(--accent-ink)}
+.zoomed-out .leaflet-tooltip.lbl.place{display:none}
+.leaflet-tooltip.lbl.place{cursor:pointer; transition:border-color .15s, color .15s, background .15s}
+.leaflet-tooltip.lbl.place:hover{border-color:var(--accent); color:var(--accent-ink)}
+.leaflet-interactive.hit{cursor:pointer}
+#map .leaflet-interactive:focus{outline:none}
+#map .leaflet-interactive:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.leaflet-popup-content-wrapper{background:var(--sheet); color:var(--ink); border:1px solid var(--rule);
+  border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,.10), 0 14px 34px -14px rgba(0,0,0,.42); padding:0; overflow:hidden}
+.leaflet-popup-tip{background:var(--sheet); border:1px solid var(--rule)}
+.leaflet-popup-content{margin:0; font-family:var(--body); line-height:1.45; width:auto!important}
+.leaflet-container a.leaflet-popup-close-button{color:var(--ink-3); top:7px; right:7px; width:22px; height:22px; font-size:17px; line-height:20px}
+.leaflet-container a.leaflet-popup-close-button:hover{color:var(--ink); background:var(--sheet-2); border-radius:2px}
+
+.card{display:flex; flex-direction:column}
+.card-head{padding:15px 17px 13px; border-bottom:1px solid var(--rule-soft); background:var(--sheet-2)}
+.card-dish{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--accent-ink); margin:0 0 5px}
+.card-name{font-family:var(--display); font-weight:700; font-size:17px; line-height:1.18; letter-spacing:-.018em;
+  color:var(--ink); margin:0 22px 0 0; text-wrap:balance}
+.card-grid{display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--rule-soft)}
+.stat{padding:11px 17px; min-width:0}
+.stat+.stat{border-left:1px solid var(--rule-soft)}
+.stat-k{display:block; font-family:var(--mono); font-size:9.5px; font-weight:500; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:5px; white-space:nowrap}
+.stat-v{display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-family:var(--mono); font-size:13px;
+  font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); letter-spacing:-.01em; line-height:1.3}
+.stat-v small{font-family:var(--mono); font-size:10.5px; font-weight:400; color:var(--ink-2); letter-spacing:.03em}
+.card-note{margin:0; padding:13px 17px; border-bottom:1px solid var(--rule-soft); font-size:16px; line-height:1.4}
+.card-note span{display:block}
+.card-note .pl{color:var(--ink)} .card-note .mi{color:var(--ink-2); margin-top:4px}
+.card-note .g{font-family:var(--mono); font-weight:600; font-size:12px}
+.card-note .pl .g{color:var(--accent)} .card-note .mi .g{color:var(--ink-3)}
+.card-addr{margin:0; padding:11px 17px; font-family:var(--mono); font-size:11px; line-height:1.5; color:var(--ink-2)}
+.card-foot{padding:0 17px 15px}
+
+.go{display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10.5px; font-weight:600;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); text-decoration:none;
+  border:1px solid var(--rule); border-radius:3px; padding:5px 9px; white-space:nowrap; transition:border-color .15s, background .15s}
+.go:hover{border-color:var(--accent); background:var(--accent-wash)}
+.go:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.go.block{display:flex; justify-content:center; width:100%; padding:10px 12px; font-size:11px;
+  background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+.go.block:hover{filter:brightness(1.1); background:var(--accent)}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; padding:11px 16px; border-top:1px solid var(--rule-soft); font-family:var(--mono); font-size:10.5px; color:var(--ink-2); letter-spacing:.03em}
+.legend i{display:inline-block; vertical-align:middle; margin-right:7px}
+.k-home{width:11px; height:11px; border-radius:50%; border:2px solid var(--ink); background:var(--sheet)}
+.k-off{width:11px; height:11px; border-radius:50%; border:2px dashed var(--ink-3); background:var(--sheet)}
+.k-place{width:11px; height:11px; border-radius:50%; background:var(--accent)}
+.k-ne{width:22px; height:11px; border-radius:6px; background:var(--ne)}
+.k-dt{width:22px; height:11px; border-radius:6px; background:var(--dt)}
+.k-ew{width:22px; height:11px; border-radius:6px; background:var(--ew)}
+.k-line{width:20px; height:0; border-top:2px dashed var(--accent)}
+
+/* ---- sortable list ---- */
+.tablewrap{overflow-x:auto; background:var(--sheet); border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; min-width:1180px}
+thead th{text-align:left; padding:0; border-bottom:1px solid var(--rule); background:var(--sheet-2); white-space:nowrap; vertical-align:bottom}
+th .lbl2, th button{display:block; width:100%; text-align:left; padding:11px 14px; font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3)}
+th button{appearance:none; background:transparent; border:0; cursor:pointer; transition:color .15s, background .15s}
+th button:hover{color:var(--ink); background:var(--rule-soft)}
+th button:focus-visible{outline:2px solid var(--accent); outline-offset:-3px}
+th button .car{opacity:0; margin-left:6px; font-size:8px; vertical-align:2px}
+th button:hover .car{opacity:.45}
+th[aria-sort="ascending"] button, th[aria-sort="descending"] button{color:var(--accent-ink)}
+th[aria-sort="ascending"] .car, th[aria-sort="descending"] .car{opacity:1}
+th.num, td.num{text-align:right}
+th.num .lbl2, th.num button{text-align:right}
+tbody tr{cursor:pointer; transition:background .15s}
+tbody tr:hover{background:var(--sheet-2)}
+tbody tr:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+tbody tr[aria-selected="true"]{background:var(--accent-wash); box-shadow:inset 3px 0 0 var(--accent)}
+td{padding:13px 14px; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+.c-rank{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--accent); letter-spacing:.08em; width:1%; padding-top:16px}
+.c-name{font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; color:var(--ink); line-height:1.25; min-width:19ch}
+.c-dish{display:block; font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
+.c-addr{font-family:var(--mono); font-size:11px; color:var(--ink-2); line-height:1.5; white-space:nowrap}
+.c-dist{font-family:var(--mono); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); white-space:nowrap; letter-spacing:-.02em}
+.c-walk{font-family:var(--mono); font-size:10.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; display:block; margin-top:3px}
+.pill{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.04em; color:#fff; padding:2px 7px; border-radius:9px; white-space:nowrap}
+.pill.NE{background:var(--ne)} .pill.DT{background:var(--dt)} .pill.EW{background:var(--ew)}
+.c-stn{display:block; font-family:var(--mono); font-size:11px; color:var(--ink-2); margin-top:4px; white-space:nowrap; font-variant-numeric:tabular-nums}
+.stars{display:inline-flex; gap:2.5px; align-items:center; vertical-align:middle}
+.stars i{width:9px; height:9px; border-radius:50%; background:var(--rule); display:block}
+.stars i.f{background:var(--accent)}
+.stars i.h{background:linear-gradient(90deg,var(--accent) 50%,var(--rule) 50%)}
+.c-rate{font-family:var(--mono); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); display:block; margin-bottom:5px; letter-spacing:-.01em}
+.pb{font-family:var(--mono); font-size:15px; font-weight:600; letter-spacing:1px; white-space:nowrap}
+.pb span{color:var(--rule)}
+.pb span.on{color:var(--ink)}
+.c-note{min-width:19ch; font-family:var(--body); font-size:16px; line-height:1.4}
+.c-note span{display:block}
+.c-note .pl{color:var(--ink)} .c-note .mi{color:var(--ink-2); margin-top:3px}
+.c-note .g{font-family:var(--mono); font-weight:600; font-size:12px}
+.c-note .pl .g{color:var(--accent)} .c-note .mi .g{color:var(--ink-3)}
+.c-none{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.04em; font-style:normal}
+
+.colophon{border-top:1px solid var(--rule); padding-top:14px; margin-top:6px;
+  font-family:var(--mono); font-size:10.5px; line-height:1.9; color:var(--ink-3); letter-spacing:.04em}
+.colophon b{color:var(--ink-2); font-weight:500}
+.colophon a{color:var(--ink-2)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Food recommendation</h1>
+    <div class="cta">
+      <a class="addlink" href="https://docs.google.com/spreadsheets/d/1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q/edit?gid=1534632431#gid=1534632431" target="_blank" rel="noopener noreferrer">Add a place to the sheet &#8599;</a>
+      <p class="cta-copy"><b>Got somewhere better?</b>Add a row — name, dish, plus, minus, rating, price band, address — and it lands on this map at the next refresh.</p>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>Measured from</h2>
+      <div class="switch" role="group" aria-label="Choose which home to measure from">
+        <button type="button" data-home="A" aria-pressed="true">Boon Keng</button>
+        <button type="button" data-home="B" aria-pressed="false">Bay hse</button>
+      </div>
+      <span class="spacer"></span>
+      <span class="note">Click any red marker or label for the card · scroll to zoom after clicking the map</span>
+    </div>
+
+    <figure class="mapcard">
+      <figcaption class="mapcard-cap"><b>Street plan</b><span id="capRing">rings every 250 m</span></figcaption>
+      <div id="map"></div>
+      <div class="legend">
+        <span><i class="k-home"></i>datum</span>
+        <span><i class="k-off"></i>other door</span>
+        <span><i class="k-place"></i>food</span>
+        <span><i class="k-ne"></i>North East</span>
+        <span><i class="k-dt"></i>Downtown</span>
+        <span><i class="k-ew"></i>East West</span>
+        <span><i class="k-line"></i>measured run</span>
+      </div>
+    </figure>
+    <p class="sr" id="live" role="status" aria-live="polite"></p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>The list</h2>
+      <span class="note">Click a column to sort · click a row to find it on the map</span>
+    </div>
+    <div class="tablewrap">
+      <table id="list">
+        <thead>
+          <tr>
+            <th class="num" scope="col"><span class="lbl2">Near</span></th>
+            <th scope="col" data-sort="name" aria-sort="none"><button type="button">Place<span class="car">&#9650;</span></button></th>
+            <th scope="col" data-sort="rating" aria-sort="descending"><button type="button">Rating<span class="car">&#9650;</span></button></th>
+            <th scope="col" data-sort="price" aria-sort="none"><button type="button">Price<span class="car">&#9650;</span></button></th>
+            <th scope="col"><span class="lbl2">Plus &amp; minus</span></th>
+            <th class="num" scope="col" data-sort="dist" aria-sort="none"><button type="button"><span id="thFrom">From Boon Keng</span><span class="car">&#9650;</span></button></th>
+            <th scope="col" data-sort="mrt" aria-sort="none"><button type="button">Nearest MRT<span class="car">&#9650;</span></button></th>
+            <th scope="col"><span class="lbl2">Address</span></th>
+            <th scope="col"><span class="lbl2">Go</span></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <span id="colo">10 places</span> · source: Google Sheet, refreshed 23 Aug 2026 · geocoded with <b>OneMap SG</b> · straight-line distances, allow 15–30% more on foot · basemap <b>CARTO</b> on <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, tiles embedded
+  </footer>
+
+</div>
+
+<script>/*__LEAFLET_JS__*/</script>
+<script>var TILES=/*__TILES__*/;</script>
+<script>
+(function(){
+  "use strict";
+  var BLANK="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  var BOUNDS=L.latLngBounds([1.30620,103.85230],[1.32400,103.87340]);
+
+  var HOMES={
+    A:{key:"A", name:"Boon Keng", lat:1.31642489627751, lng:103.861501638313, dir:"right"},
+    B:{key:"B", name:"Bay hse",   lat:1.32282118210161, lng:103.869177870562, dir:"left"}
+  };
+
+  var MRT=[
+    {code:"NE9",  line:"NE", name:"Boon Keng",     lat:1.319336, lng:103.861569, dir:"right"},
+    {code:"DT23", line:"DT", name:"Bendemeer",     lat:1.313673, lng:103.862978, dir:"right"},
+    {code:"DT24", line:"DT", name:"Geylang Bahru", lat:1.321301, lng:103.871623, dir:"right"},
+    {code:"NE8",  line:"NE", name:"Farrer Park",   lat:1.311906, lng:103.853478, dir:"right"},
+    {code:"EW11", line:"EW", name:"Lavender",      lat:1.307378, lng:103.862768, dir:"right"}
+  ];
+
+  var PLACES=[
+    {id:"prince", name:"Prince Noodles @ ARC 380", short:"Prince Noodles", dish:"Ban mian",
+     lat:1.313217, lng:103.860335, addr:"380 Jalan Besar #01-10, 209000", price:"$",
+     plus:"Best banmian", minus:"Slightly salty", rating:4.0, dir:"left"},
+    {id:"kitchenman", name:"Kitchenman Nasi Lemak", short:"Kitchenman", dish:"Nasi lemak",
+     lat:1.312217, lng:103.862824, addr:"2 Kallang Ave #01-08/13, CT Hub, 339407", price:"$",
+     plus:"Village park style nasi lemak", minus:"1 hr wait", rating:4.0, dir:"right"},
+    {id:"chengmun", name:"Cheng Mun Chee Kee Pig Organ Soup", short:"Cheng Mun Chee Kee", dish:"Pig organ soup",
+     lat:1.312202, lng:103.860048, addr:"24 Foch Road, 209263", price:"$",
+     plus:"Cheap and taste home cooked", minus:"Slightly warm place", rating:4.0, dir:"left"},
+    {id:"mookata", name:"New Udon Mookata", short:"New Udon Mookata", dish:"Mookata",
+     lat:1.311901, lng:103.861540, addr:"119 Lavender Street, 338731", price:"$$",
+     plus:"Good pork", minus:"Stomachache the day after", rating:4.0, dir:"right"},
+    {id:"char", name:"Char", short:"Char", dish:"Char siew",
+     lat:1.316116, lng:103.858247, addr:"454 Race Course Road, 218697", price:"$$",
+     plus:"Nice. Good wasabi sauce", minus:"Oily charsiew, slightly expensive", rating:3.5, dir:"left"},
+    {id:"beachroad", name:"Beach Road Scissor-Cut Curry Rice", short:"Beach Rd Scissor-Cut", dish:"Curry rice",
+     lat:1.309523, lng:103.857742, addr:"229 Jalan Besar, 208905", price:"$",
+     plus:"", minus:"", rating:3.5, dir:"left"},
+    {id:"imem", name:"Im-Em Thai Kitchen", short:"Im-Em Thai Kitchen", dish:"Pad Thai",
+     lat:1.309711, lng:103.864326, addr:"12 Kallang Ave #01-40, Aperia, 339511", price:"$$",
+     plus:"", minus:"", rating:3.5, dir:"right"},
+    {id:"roast", name:"88 Hong Kong Roast Meat Specialist", short:"88 Hong Kong Roast Meat", dish:"Char siew, sio ba",
+     lat:1.315193, lng:103.859760, addr:"308 Lavender Street, 338814", price:"$",
+     plus:"Nice", minus:"Oily", rating:3.0, dir:"left"},
+    {id:"moon", name:"Moonchild", short:"Moonchild", dish:"Cold brew coffee",
+     lat:1.312387, lng:103.859367, addr:"351 Jalan Besar #01-01, 208988", price:"$$",
+     plus:"Good coffee, good mains", minus:"Slightly expensive", rating:3.0, dir:"left"},
+    {id:"sweetcheeks", name:"Sweet Cheeks", short:"Sweet Cheeks", dish:"Ice cream",
+     lat:1.311711, lng:103.860112, addr:"147 Tyrwhitt Road, 207561", price:"$$",
+     plus:"", minus:"", rating:2.5, dir:"bottom"}
+  ];
+
+  var COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  var NICE=[50,100,200,250,500,1000,2000];
+  var K=Math.cos(1.3164*Math.PI/180)*111320;
+
+  function dist(a,b){
+    var R=6371000, p1=a.lat*Math.PI/180, p2=b.lat*Math.PI/180;
+    var dp=p2-p1, dl=(b.lng-a.lng)*Math.PI/180;
+    var h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function bearing(a,b){ return (Math.atan2((b.lng-a.lng)*K,(b.lat-a.lat)*111320)*180/Math.PI+360)%360; }
+  function fmtM(d){ return Math.round(d).toLocaleString("en-US")+" m"; }
+  function fmtRing(m){ return m>=1000 ? (m/1000).toFixed(m%1000?1:0)+" km" : m+" m"; }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function walkMin(d){ return Math.max(1,Math.round(d/80)); }
+  function isDark(){
+    var r=document.documentElement.getAttribute("data-theme");
+    if(r==="dark") return true;
+    if(r==="light") return false;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function stars(r){
+    var h="";
+    for(var i=1;i<=5;i++) h+='<i class="'+(r>=i?"f":(r>=i-0.5?"h":""))+'"></i>';
+    return '<span class="stars" role="img" aria-label="'+r.toFixed(1)+' out of 5">'+h+'</span>';
+  }
+  function priceBar(band){
+    var n=band.length, h="";
+    for(var i=1;i<=3;i++) h+='<span class="'+(i<=n?"on":"")+'">$</span>';
+    return '<span class="pb" role="img" aria-label="'+band+', on a three-band scale">'+h+'</span>';
+  }
+  // No origin parameter: Google Maps then routes from the viewer's own current
+  // location. It also keeps either home's coordinates out of the outbound URL.
+  function gmaps(p){
+    return "https://www.google.com/maps/dir/?api=1&destination="+
+           p.lat.toFixed(6)+","+p.lng.toFixed(6)+"&travelmode=walking";
+  }
+
+  PLACES.forEach(function(p){
+    var best=null;
+    MRT.forEach(function(s){ var d=dist(p,s); if(!best||d<best.d) best={s:s,d:d}; });
+    p.mrt=best.s; p.mrtD=best.d; p.mrtW=walkMin(best.d);
+  });
+
+  var Embedded=L.TileLayer.extend({
+    initialize:function(theme,opts){ this._theme=theme; L.TileLayer.prototype.initialize.call(this,"",opts); },
+    getTileUrl:function(c){
+      var t=TILES[this._theme+"/"+this._getZoomForUrl()+"/"+c.x+"/"+c.y];
+      return t ? "data:image/webp;base64,"+t : BLANK;
+    }
+  });
+
+  var map=L.map("map",{scrollWheelZoom:false, zoomSnap:.25, minZoom:15, maxZoom:18,
+    maxBounds:BOUNDS.pad(.05), maxBoundsViscosity:.9});
+  var ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> · tiles embedded';
+  var tileOpts={minZoom:15, maxZoom:18, maxNativeZoom:17, tileSize:256, bounds:BOUNDS, attribution:ATTR, noWrap:true};
+  var layer=null;
+  function setTiles(){
+    var want=isDark()?"D":"L";
+    if(layer && layer._theme===want) return;
+    if(layer) map.removeLayer(layer);
+    layer=new Embedded(want,tileOpts); layer.addTo(map); layer.bringToBack();
+  }
+  setTiles();
+  map.getContainer().addEventListener("click",function(){ map.scrollWheelZoom.enable(); });
+  map.getContainer().addEventListener("mouseleave",function(){ map.scrollWheelZoom.disable(); });
+
+  var state={home:"A", sel:null, sortKey:"rating", sortDir:-1};
+  var SORTS={
+    name:function(a,b){ return a.p.name.localeCompare(b.p.name); },
+    dist:function(a,b){ return a.d-b.d; },
+    mrt:function(a,b){ return a.p.mrtD-b.p.mrtD; },
+    rating:function(a,b){ return a.p.rating-b.p.rating || b.d-a.d; },
+    price:function(a,b){ return a.p.price.length-b.p.price.length || b.p.rating-a.p.rating; }
+  };
+
+  var gRings=L.layerGroup().addTo(map), gLines=L.layerGroup().addTo(map);
+  var placeMarkers={}, homeMarkers={}, lastMarkerClick=0;
+
+  MRT.forEach(function(s){
+    L.marker([s.lat,s.lng],{
+      icon:L.divIcon({className:"", html:'<span class="mrt '+s.line+'">'+s.code+'</span>', iconSize:[48,24], iconAnchor:[24,12]}),
+      keyboard:false, zIndexOffset:400, interactive:false
+    }).addTo(map)
+     .bindTooltip(esc(s.name),{permanent:true, direction:s.dir, offset:[s.dir==="right"?28:-28,0], className:"lbl stn "+s.line, opacity:1});
+  });
+
+  // Each place is three stacked circles: a fat invisible hit target that owns all
+  // the interaction, a faint target ring, and the dot itself. The ring and dot are
+  // non-interactive, so pointer events fall through to the 20px hit target below.
+  PLACES.forEach(function(p){
+    var hit=L.circleMarker([p.lat,p.lng],{radius:20, stroke:false, fill:true, fillOpacity:0.001, className:"hit"}).addTo(map);
+    var ring=L.circleMarker([p.lat,p.lng],{radius:14, fill:false, weight:1.5, opacity:.32, color:css("--accent"), interactive:false}).addTo(map);
+    var dot=L.circleMarker([p.lat,p.lng],{radius:8, weight:2.5, color:css("--sheet"), fillColor:css("--accent"), fillOpacity:1, interactive:false}).addTo(map);
+    hit._ring=ring; hit._dot=dot; hit._pid=p.id;
+    hit.bindTooltip("",{permanent:true, interactive:true, direction:p.dir,
+      offset:p.dir==="bottom"?[0,17]:[p.dir==="left"?-17:17,0], className:"lbl place", opacity:1});
+    hit.bindPopup("",{closeButton:true, autoPan:true, minWidth:278, maxWidth:300, autoPanPadding:[24,24]});
+    hit.on("click",function(){ lastMarkerClick=Date.now(); select(p.id); });
+    hit.on("mouseover",function(){ if(state.sel!==p.id) paint(hit,false,true); });
+    hit.on("mouseout", function(){ if(state.sel!==p.id) paint(hit,false,false); });
+    var el=hit.getElement();
+    if(el){
+      el.setAttribute("tabindex","0");
+      el.setAttribute("role","button");
+      el.setAttribute("aria-label",p.name);
+      el.dataset.place=p.id;
+    }
+    placeMarkers[p.id]=hit;
+  });
+
+  // clicking the permanent label picks the place too — it doubles the target
+  map.getContainer().addEventListener("click",function(e){
+    var t=e.target.closest(".leaflet-tooltip[data-place]");
+    if(t){ lastMarkerClick=Date.now(); select(t.dataset.place); }
+  });
+
+  ["A","B"].forEach(function(k){
+    var h=HOMES[k];
+    var m=L.marker([h.lat,h.lng],{
+      icon:L.divIcon({className:"", html:'<span class="hm" data-home="'+k+'" role="button" tabindex="0" aria-label="Measure from '+esc(h.name)+'"><i></i></span>', iconSize:[21,21], iconAnchor:[10.5,10.5]}),
+      keyboard:false, zIndexOffset:1000
+    }).addTo(map);
+    m.bindTooltip("",{permanent:true, direction:h.dir, offset:[h.dir==="right"?13:-13,0], className:"lbl home", opacity:1});
+    m.on("click",function(){ lastMarkerClick=Date.now(); setHome(k); });
+    homeMarkers[k]=m;
+  });
+
+  map.on("click",function(){ if(Date.now()-lastMarkerClick<80) return; select(null); });
+  function syncZoomClass(){ map.getContainer().classList.toggle("zoomed-out", map.getZoom()<15.9); }
+  map.on("zoomend",syncZoomClass);
+
+  function paint(m,on,hover){
+    var acc=css("--accent");
+    m._dot.setStyle({color:css("--sheet"), fillColor:acc});
+    m._dot.setRadius(on?10:(hover?9:8));
+    m._ring.setStyle({color:acc, opacity:on?.95:(hover?.7:.32), weight:on?2:1.5});
+    m._ring.setRadius(on?17:(hover?16:14));
+  }
+
+  function rows(){
+    var H=HOMES[state.home];
+    return PLACES.map(function(p){
+      var d=dist(H,p), b=bearing(H,p);
+      return {p:p,d:d,b:b,cp:COMPASS[Math.floor(((b+11.25)%360)/22.5)],walk:walkMin(d)};
+    }).sort(function(x,y){ return x.d-y.d; });
+  }
+
+  function noteHTML(p,cls){
+    if(!p.plus && !p.minus) return '<span class="c-none">Not written up yet</span>';
+    var h="";
+    if(p.plus)  h+='<span class="pl"><b class="g">+</b> '+esc(p.plus)+'</span>';
+    if(p.minus) h+='<span class="mi"><b class="g">&minus;</b> '+esc(p.minus)+'</span>';
+    return h;
+  }
+
+  function draw(){
+    var H=HOMES[state.home], R=rows(), max=R[R.length-1].d;
+    var inkDim=css("--ink-3"), acc=css("--accent");
+
+    var step=NICE[0];
+    for(var i=0;i<NICE.length;i++){ if(max/NICE[i]>=2.5) step=NICE[i]; }
+    gRings.clearLayers();
+    for(var r=step;r<=max*1.12;r+=step){
+      L.circle([H.lat,H.lng],{radius:r,fill:false,color:inkDim,weight:1,dashArray:"3 4",opacity:.7,interactive:false}).addTo(gRings);
+    }
+    document.getElementById("capRing").textContent="rings every "+fmtRing(step);
+
+    gLines.clearLayers();
+    R.forEach(function(row){
+      var on=state.sel===row.p.id, dim=state.sel&&!on;
+      L.polyline([[H.lat,H.lng],[row.p.lat,row.p.lng]],{
+        color:acc, weight:on?3:1.5, opacity:dim?.16:(on?1:.62),
+        dashArray:on?null:"5 4", interactive:false}).addTo(gLines);
+    });
+
+    R.forEach(function(row){
+      var p=row.p, m=placeMarkers[p.id], on=state.sel===p.id;
+      m.setTooltipContent(esc(p.short)+(on?"<b>"+fmtM(row.d)+" · "+row.walk+" min walk</b>":""));
+      var tt=m.getTooltip(), te=tt&&tt.getElement&&tt.getElement();
+      if(te){ te.classList.toggle("on",!!on); te.dataset.place=p.id; }
+      // re-assert the focus attributes: Leaflet rebuilds path elements when the
+      // SVG renderer resets, which drops anything set at creation time
+      var pe=m.getElement();
+      if(pe && !pe.dataset.place){
+        pe.setAttribute("tabindex","0"); pe.setAttribute("role","button");
+        pe.setAttribute("aria-label",p.name); pe.dataset.place=p.id;
+      }
+      paint(m,on,false);
+      m.setPopupContent(
+        '<div class="card">'+
+          '<div class="card-head">'+
+            '<p class="card-dish">'+esc(p.dish)+'</p>'+
+            '<h3 class="card-name">'+esc(p.name)+'</h3>'+
+          '</div>'+
+          '<div class="card-grid">'+
+            '<div class="stat"><span class="stat-k">Rating</span>'+
+              '<span class="stat-v">'+p.rating.toFixed(1)+stars(p.rating)+'</span></div>'+
+            '<div class="stat"><span class="stat-k">Price</span>'+
+              '<span class="stat-v">'+priceBar(p.price)+'</span></div>'+
+          '</div>'+
+          '<div class="card-grid">'+
+            '<div class="stat"><span class="stat-k">From '+esc(H.name)+'</span>'+
+              '<span class="stat-v">'+fmtM(row.d)+'<small>'+row.walk+' min · '+row.cp+'</small></span></div>'+
+            '<div class="stat"><span class="stat-k">Nearest MRT</span>'+
+              '<span class="stat-v"><span class="pill '+p.mrt.line+'">'+p.mrt.code+'</span>'+
+              '<small>'+esc(p.mrt.name)+' · '+p.mrtW+' min</small></span></div>'+
+          '</div>'+
+          '<p class="card-note">'+noteHTML(p)+'</p>'+
+          '<p class="card-addr">'+esc(p.addr)+'</p>'+
+          '<div class="card-foot"><a class="go block" href="'+gmaps(p)+'" target="_blank" rel="noopener noreferrer" '+
+            'aria-label="Walking directions from your location to '+esc(p.name)+' in Google Maps">Directions from me &#8599;</a></div>'+
+        '</div>');
+    });
+
+    ["A","B"].forEach(function(k){
+      var act=state.home===k;
+      homeMarkers[k].setTooltipContent(esc(HOMES[k].name));
+      var el=homeMarkers[k].getElement(); if(el){ var sp=el.querySelector(".hm"); if(sp) sp.classList.toggle("off",!act); }
+      var ht=homeMarkers[k].getTooltip(), he=ht&&ht.getElement&&ht.getElement();
+      if(he) he.classList.toggle("on",act);
+    });
+
+    R.forEach(function(row,i){ row.rank=i+1; });
+    var T=R.slice().sort(function(a,b){ return SORTS[state.sortKey](a,b)*state.sortDir; });
+    document.getElementById("rows").innerHTML=T.map(function(row){
+      var p=row.p, on=state.sel===p.id;
+      return '<tr data-place="'+p.id+'" tabindex="0" aria-selected="'+(on?"true":"false")+'">'+
+        '<td class="num c-rank">'+row.rank+'</td>'+
+        '<td class="c-name">'+esc(p.name)+'<span class="c-dish">'+esc(p.dish)+'</span></td>'+
+        '<td><span class="c-rate">'+p.rating.toFixed(1)+'</span>'+stars(p.rating)+'</td>'+
+        '<td>'+priceBar(p.price)+'</td>'+
+        '<td class="c-note">'+noteHTML(p)+'</td>'+
+        '<td class="num"><span class="c-dist">'+fmtM(row.d)+'</span><span class="c-walk">'+row.walk+' min walk</span></td>'+
+        '<td><span class="pill '+p.mrt.line+'">'+p.mrt.code+'</span><span class="c-stn">'+esc(p.mrt.name)+' · '+p.mrtW+' min</span></td>'+
+        '<td class="c-addr">'+esc(p.addr)+'</td>'+
+        '<td><a class="go" href="'+gmaps(p)+'" target="_blank" rel="noopener noreferrer" '+
+          'aria-label="Walking directions from your location to '+esc(p.name)+' in Google Maps">Directions &#8599;</a></td>'+
+        '</tr>';
+    }).join("");
+
+    Array.prototype.forEach.call(document.querySelectorAll("#list th[data-sort]"),function(th){
+      var active=th.dataset.sort===state.sortKey;
+      th.setAttribute("aria-sort", active ? (state.sortDir>0?"ascending":"descending") : "none");
+      var car=th.querySelector(".car");
+      if(car) car.innerHTML = (active && state.sortDir<0) ? "&#9660;" : "&#9650;";
+    });
+
+    document.getElementById("thFrom").textContent="From "+H.name;
+    document.getElementById("colo").textContent=
+      PLACES.length+" places · "+fmtM(R[0].d)+"–"+fmtM(max)+" from "+H.name;
+    Array.prototype.forEach.call(document.querySelectorAll(".switch button"),function(b){
+      b.setAttribute("aria-pressed", b.dataset.home===state.home?"true":"false");
+    });
+  }
+
+  function setHome(k){
+    if(!HOMES[k]||state.home===k) return;
+    state.home=k; draw();
+    if(state.sel) placeMarkers[state.sel].openPopup();
+    document.getElementById("live").textContent="Measuring from "+HOMES[k].name+".";
+  }
+  function select(id){
+    state.sel=(id && state.sel!==id) ? id : null;
+    draw();
+    if(state.sel) placeMarkers[state.sel].openPopup();
+  }
+
+  document.querySelector(".switch").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-home]"); if(b) setHome(b.dataset.home);
+  });
+  document.getElementById("list").addEventListener("click",function(e){
+    if(e.target.closest("a.go")) return;              // let the directions link through
+    var th=e.target.closest("th[data-sort]");
+    if(th){
+      var k=th.dataset.sort;
+      if(state.sortKey===k) state.sortDir=-state.sortDir;
+      else { state.sortKey=k; state.sortDir=(k==="rating")?-1:1; }
+      draw();
+      document.getElementById("live").textContent="Sorted by "+k+", "+(state.sortDir>0?"ascending":"descending")+".";
+      return;
+    }
+    var tr=e.target.closest("tr[data-place]"); if(tr) select(tr.dataset.place);
+  });
+  document.getElementById("list").addEventListener("keydown",function(e){
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    if(e.target.closest("a.go")) return;
+    var tr=e.target.closest("tr[data-place]"); if(!tr) return;
+    e.preventDefault(); select(tr.dataset.place);
+  });
+  document.getElementById("map").addEventListener("keydown",function(e){
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    var sp=e.target.closest(".hm[data-home]");
+    if(sp){ e.preventDefault(); setHome(sp.dataset.home); return; }
+    var pk=e.target.closest("[data-place]");
+    if(pk){ e.preventDefault(); select(pk.dataset.place); }
+  });
+
+  var mq=window.matchMedia("(prefers-color-scheme: dark)");
+  (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(function(){ setTiles(); draw(); });
+  new MutationObserver(function(){ setTiles(); draw(); })
+    .observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+  map.fitBounds(L.latLngBounds(
+    PLACES.map(function(p){return [p.lat,p.lng];})
+      .concat(MRT.map(function(s){return [s.lat,s.lng];}))
+      .concat([[HOMES.A.lat,HOMES.A.lng],[HOMES.B.lat,HOMES.B.lng]])
+  ).pad(.06),{maxZoom:16});
+  syncZoomClass();
+  draw();
+})();
+</script>
