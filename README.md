@@ -123,7 +123,14 @@ drifted.
 
 A home is located from the postal code on the sheet's other tab, and only its
 coordinates are written into `data/homes.json` — the postal code itself never
-reaches this repo or the page.
+reaches this repo or the page. Neither does the name: the sheet labels those
+rows with the names of the people who live behind them, so the page names them
+from `home_labels` in `data/config.json` instead — `A's Hse`, `B's Hse`, `C's
+Hse`, in tab order. That label is the only name there is downstream, warnings
+included, so nothing the sheet calls a home reaches a public Actions log either.
+Reordering the rows on the sheet swaps which door is which; the labels mean
+nothing to a stranger, and the person who can tell they have swapped is the one
+who can also see it on the map.
 
 That tab is found by a heading saying **postal code**, not by being the tab that
 is not the food list, so tab order is no longer load-bearing. Within it, the codes
@@ -133,7 +140,7 @@ otherwise enough to be geocoded and drawn as somebody's front door.
 
 If OneMap cannot resolve one, `refresh.py` says so by label and leaves that home
 off the map rather than guessing. To place it anyway, add coordinates under
-`home_overrides` in `data/config.json`, keyed by the label on the sheet. That
+`home_overrides` in `data/config.json`, keyed by that same `home_labels` name. That
 file is public, so an override holds coordinates, not a postal code or a block
 number — nothing more identifying than the page already ships. Delete the entry
 once the sheet's own code resolves.
@@ -141,7 +148,8 @@ once the sheet's own code resolves.
 ## Configuration
 
 `data/config.json` holds everything you would otherwise have to edit code for:
-the sheet id and URL, walking speed, display names for the homes, hand-written
+the sheet id and URL, walking speed, the names the homes are shown under
+(`home_labels`), hand-written
 short labels for places whose names are too long for the map, the stations the
 map draws (`mrt`), lines not yet in passenger service (`mrt_lines_excluded`),
 and any home whose postal code the sheet has wrong (`home_overrides`).

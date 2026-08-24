@@ -130,14 +130,15 @@ def test_homes_come_from_the_tab_that_says_postal_code():
     food = [{"A": S("Name of place"), "B": S("Address")},
             {"A": S("Char"), "B": ADDR}]
     homes = [{"B": S("Insert your house postal code below")},
-             {"B": S("Fang hse"), "C": "330008"}]
+             {"B": S("Someone's house"), "C": "330008"}]
     tabs = tabs_of(homes, food)                      # homes tab FIRST, on purpose
     warnings = []
     food_tab = next(t for t in tabs
                     if any(v == "Name of place" for c in t for v in c.values()))
-    got = refresh.parse_homes(refresh.homes_tab(tabs, food_tab, warnings), [], warnings)
+    got = refresh.parse_homes(refresh.homes_tab(tabs, food_tab, warnings),
+                              ["A's Hse"], warnings)
     check("the labelled tab wins whatever the tab order",
-          [h["name"] for h in got], ["Fang hse"])
+          [h["name"] for h in got], ["A's Hse"])
     check("so no fallback was needed",
           any("not the food list" in w for w in warnings), False)
 
@@ -145,12 +146,13 @@ def test_homes_come_from_the_tab_that_says_postal_code():
 def test_an_unlabelled_second_tab_still_works_but_complains():
     food = [{"A": S("Name of place"), "B": S("Address")},
             {"A": S("Char"), "B": ADDR}]
-    homes = [{"B": S("Fang hse"), "C": "330008"}]
+    homes = [{"B": S("Someone's house"), "C": "330008"}]
     tabs = tabs_of(food, homes)
     warnings = []
     food_tab = tabs[0]
-    got = refresh.parse_homes(refresh.homes_tab(tabs, food_tab, warnings), [], warnings)
-    check("it still finds the home", [h["name"] for h in got], ["Fang hse"])
+    got = refresh.parse_homes(refresh.homes_tab(tabs, food_tab, warnings),
+                              ["A's Hse"], warnings)
+    check("it still finds the home", [h["name"] for h in got], ["A's Hse"])
     check("and asks for a heading",
           any("not the food list" in w for w in warnings), True)
 
@@ -159,16 +161,35 @@ def test_a_stray_six_digit_number_is_not_a_front_door():
     # The stray sits to the LEFT of the real code, so a reader that takes the
     # first six-digit cell in the row picks the wrong one and this test says so.
     rows = [{"A": S("Insert your house postal code below")},
-            {"A": S("Fang hse"), "B": "123456", "C": "330008"},
-            {"A": S("Bay hse"), "C": "339511"}]
+            {"A": S("Someone's house"), "B": "123456", "C": "330008"},
+            {"A": S("Another's house"), "C": "339511"}]
     tab = tabs_of(rows)[0]
     warnings = []
-    got = refresh.parse_homes(tab, [], warnings)
+    got = refresh.parse_homes(tab, ["A's Hse", "B's Hse"], warnings)
     check("column C holds the codes", refresh.postal_column(tab), "C")
     check("one home per row, read from that column",
-          [h["name"] for h in got], ["Fang hse", "Bay hse"])
+          [h["name"] for h in got], ["A's Hse", "B's Hse"])
     check("and the stray number was not geocoded",
           [h["postal"] for h in got], ["330008", "339511"])
+
+
+def test_the_sheets_own_label_is_never_published():
+    # The sheet names these rows after the people who live in them. Whatever it
+    # says, the page shows the config label for that position and nothing else -
+    # including in the warnings, which are printed into a public Actions log.
+    rows = [{"A": S("Insert your house postal code below")},
+            {"A": S("Real Person hse"), "B": "330008"},
+            {"A": S("Another Real Person hse"), "B": "339511"},
+            {"A": S("A Third Real Person hse"), "B": "408866"}]
+    warnings = []
+    got = refresh.parse_homes(tabs_of(rows)[0], ["A's Hse", "B's Hse"], warnings)
+    check("labelled from config, in tab order",
+          [h["name"] for h in got], ["A's Hse", "B's Hse", "Home 3"])
+    check("a home with no label in config says so",
+          any("no name in config.home_labels" in w for w in warnings), True)
+    check("and no sheet label reaches a name or a warning",
+          any("Real Person" in t
+              for t in [h["name"] for h in got] + warnings), False)
 
 
 def test_two_long_names_do_not_share_an_id():

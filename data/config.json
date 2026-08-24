@@ -2,12 +2,13 @@
   "sheet_id": "1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q",
   "sheet_gid": "1534632431",
   "sheet_url": "https://docs.google.com/spreadsheets/d/1bYLLZRe5jsArKLxaFrYtyN9jPjPALrlPnisvw1V-U3Q/edit?gid=1534632431#gid=1534632431",
-  "_home_labels": "Display names for the rows on the postal-code tab, in order. Used only when that row has no label of its own. Postal codes are never written into the built page.",
+  "_home_labels": "The names the page shows for the rows on the postal-code tab, in tab order. These are the only names there are: the sheet's own labels are people's names and are never published, so a row here is what identifies a home everywhere - homes.json, the map, the table, home_overrides and every warning. Reordering the rows on the sheet swaps which door is which. Postal codes are never written into the built page.",
   "home_labels": [
-    "Fang hse",
-    "Bay hse"
+    "A's Hse",
+    "B's Hse",
+    "C's Hse"
   ],
-  "_home_overrides": "Homes whose postal code OneMap cannot resolve, keyed by the label on the sheet. Coordinates only: this file is public, and the postal codes and block numbers deliberately are not. Delete an entry once the sheet's own code resolves.",
+  "_home_overrides": "Homes whose postal code OneMap cannot resolve, keyed by the label above. Coordinates only: this file is public, and the postal codes and block numbers deliberately are not. Delete an entry once the sheet's own code resolves.",
   "home_overrides": {},
   "_walk_speed": "Metres per minute used for every walking estimate.",
   "walk_speed_m_per_min": 80,

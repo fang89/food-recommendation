@@ -188,6 +188,21 @@ def postal_column(rows):
 
 
 def parse_homes(rows, labels, warnings):
+    """Homes are named by config, in tab order - never by what the sheet calls them.
+
+    The sheet labels these rows with the names of the people who live behind
+    them, which is how the people editing it think of them, and it is the one
+    thing on that tab besides the postal codes worth keeping off a public page.
+    So the sheet is read only far enough to know a row is a home; the name the
+    page shows comes from config.home_labels, and the sheet's own text is never
+    published - not into homes.json, not into a warning, and so not into a
+    public Actions log either.
+
+    Which label lands on which home is therefore tab order, and reordering the
+    rows swaps them. That costs nothing here that it would cost with real
+    names: the labels carry no meaning to a stranger, and the only person who
+    can tell a swap has happened is the one who can also see it on the map.
+    """
     col = postal_column(rows)
     if col is None:
         return []
@@ -197,14 +212,13 @@ def parse_homes(rows, labels, warnings):
         if not re.fullmatch(r"\d{6}(\.0)?", raw):
             continue
         postal = raw.split(".")[0]
-        label = None
-        for letter in sorted(cells, key=lambda c: (len(c), c)):
-            if letter != col and re.search(r"[A-Za-z]", cells[letter]):
-                label = cells[letter].strip()
-        if not label:
-            label = labels[len(out)] if len(out) < len(labels) else "Home %d" % (len(out) + 1)
-            warnings.append('Home row with postal code ending %s has no label - '
-                            'using "%s" from config.home_labels.' % (postal[-2:], label))
+        if len(out) < len(labels):
+            label = labels[len(out)]
+        else:
+            label = "Home %d" % (len(out) + 1)
+            warnings.append("Home row %d has no name in config.home_labels - "
+                            'calling it "%s". Add one to name it.'
+                            % (len(out) + 1, label))
         out.append({"name": label, "postal": postal})
     return out
 
