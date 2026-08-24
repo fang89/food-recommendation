@@ -252,6 +252,24 @@
   "matched": "380 JALAN BESAR ARC 380 SINGAPORE 209000"
  },
  {
+  "id": "seoul-tofu",
+  "name": "SEOUL TOFU",
+  "short": "SEOUL TOFU",
+  "cat": "Korean food",
+  "by": "Basil",
+  "lat": 1.33873066388193,
+  "lng": 103.8716700081919,
+  "addr": "11 Bidadari Park Dr, Mall, #01-37 The Woodleigh, Singapore 367803",
+  "price": "$$",
+  "plus": "Good and big portion",
+  "minus": "Queue is mad",
+  "rating": 4.0,
+  "mrt": "NE11",
+  "mrtD": 108,
+  "dir": "right",
+  "matched": "11 BIDADARI PARK DRIVE THE WOODLEIGH MALL SINGAPORE 367803"
+ },
+ {
   "id": "shan-e-punjab",
   "name": "SHAN-E-PUNJAB",
   "short": "SHAN-E-PUNJAB",
@@ -374,7 +392,7 @@
   "rating": 3.5,
   "mrt": "NE9",
   "mrtD": 514,
-  "dir": "right",
+  "dir": "left",
   "matched": "454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"
  },
  {
