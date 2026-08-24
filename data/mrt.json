@@ -35,6 +35,13 @@
   "lng": 103.862768
  },
  {
+  "code": "DT22",
+  "line": "DT",
+  "name": "Jalan Besar",
+  "lat": 1.305171,
+  "lng": 103.855296
+ },
+ {
   "code": "EW12",
   "line": "EW",
   "name": "Bugis",

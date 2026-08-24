@@ -90,6 +90,24 @@
   "matched": "12 KALLANG AVENUE APERIA SINGAPORE 339511"
  },
  {
+  "id": "bismillah-biryani-restaurant",
+  "name": "Bismillah Biryani Restaurant",
+  "short": "Bismillah Biryani…",
+  "cat": "Indian food",
+  "by": "Jared",
+  "lat": 1.305041895189123,
+  "lng": 103.8537067516454,
+  "addr": "50 Dunlop St, Singapore 209379",
+  "price": "$$",
+  "plus": "Michelin bib gourmand recently",
+  "minus": "",
+  "rating": 4.0,
+  "mrt": "DT13",
+  "mrtD": 168,
+  "dir": "left",
+  "matched": "50 DUNLOP STREET LITTLE INDIA CONSERVATION AREA SINGAPORE 209379"
+ },
+ {
   "id": "cheng-mun-chee-kee-pig-organ",
   "name": "Cheng Mun Chee Kee Pig Organ Soup",
   "short": "Cheng Mun Chee Kee",
@@ -234,6 +252,24 @@
   "matched": "380 JALAN BESAR ARC 380 SINGAPORE 209000"
  },
  {
+  "id": "shan-e-punjab",
+  "name": "SHAN-E-PUNJAB",
+  "short": "SHAN-E-PUNJAB",
+  "cat": "North Indian food",
+  "by": "Jared",
+  "lat": 1.306186638467718,
+  "lng": 103.8505855700667,
+  "addr": "665 Buffalo Rd, #01-271, Singapore 210665",
+  "price": "$$",
+  "plus": "Naan; Butter chicken",
+  "minus": "",
+  "rating": 4.0,
+  "mrt": "NE7",
+  "mrtD": 125,
+  "dir": "left",
+  "matched": "665 BUFFALO ROAD ZHUJIAO CENTRE (TEKKA MARKET) SINGAPORE 210665"
+ },
+ {
   "id": "sheng-ji-soya-sauce-chicken",
   "name": "Sheng Ji Soya Sauce Chicken Rice/Noodle 生記油雞飯 • 油雞麵",
   "short": "Sheng Ji Soya Sauce…",
@@ -338,7 +374,7 @@
   "rating": 3.5,
   "mrt": "NE9",
   "mrtD": 514,
-  "dir": "left",
+  "dir": "right",
   "matched": "454 RACE COURSE ROAD RACE COURSE ROAD/OWEN ROAD CONSERVATION AREA SINGAPORE 218697"
  },
  {
